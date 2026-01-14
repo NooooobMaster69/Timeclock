@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  />
+  <title>Register - 360WPT TimeClock</title>
+  <style>
+    :root {
+      --bg1: #e0f2fe;
+      --bg2: #dbeafe;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #475569;
+      --primary: #16a34a;
+      --primary-weak: #86efac;
+      --shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
+      --radius: 18px;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(1200px 800px at 15% 15%, var(--bg1), transparent),
+        radial-gradient(1200px 800px at 85% 85%, var(--bg2), #e2e8f0);
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+    .card {
+      width: 100%;
+      max-width: 420px;
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 28px 24px;
+    }
+    .brand {
+      text-align: center;
+      margin: 0 0 6px;
+      font-weight: 800;
+      color: #2563eb;
+      letter-spacing: .2px;
+    }
+    .subtitle {
+      text-align: center;
+      margin: 0 0 18px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    label {
+      display: block;
+      font-size: 13px;
+      color: var(--muted);
+      margin: 14px 4px 6px;
+    }
+    input,
+    select {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1px solid #cbd5e1;
+      outline: none;
+      font-size: 15px;
+      transition: box-shadow .2s, border-color .2s, transform .05s;
+      background: #fff;
+    }
+    input:focus,
+    select:focus {
+      border-color: var(--primary-weak);
+      box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.15);
+    }
+
+    .actions { margin-top: 18px; }
+    button {
+      width: 100%;
+      border: 0;
+      border-radius: 12px;
+      padding: 12px 16px;
+      background: var(--primary);
+      color: white;
+      font-weight: 700;
+      font-size: 15px;
+      cursor: pointer;
+      transition: transform .08s ease, box-shadow .2s ease, opacity .2s;
+      box-shadow: 0 6px 18px rgba(22, 163, 74, 0.28);
+    }
+    button:hover { transform: translateY(-1px); opacity: .96; }
+    button:active { transform: translateY(0); }
+    .links {
+      margin-top: 14px;
+      text-align: center;
+      font-size: 14px;
+    }
+    .links a {
+      color: var(--muted);
+      text-decoration: none;
+    }
+    .links a:hover { color: #2563eb; text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <main class="card" role="main" aria-labelledby="title">
+    <h1 id="title" class="brand">360WPT TimeClock</h1>
+    <p class="subtitle">Register a new employee account</p>
+
+    <form id="registerForm" novalidate>
+      <label for="username">Username</label>
+      <input
+        id="username"
+        name="username"
+        placeholder="e.g., jason"
+        autocomplete="username"
+        spellcheck="false"
+        required
+      />
+
+      <label for="name">Full Name</label>
+      <input
+        id="name"
+        name="name"
+        placeholder="e.g., Jason Chen"
+        autocomplete="name"
+        spellcheck="false"
+        required
+      />
+<!-- ✅ 新增：分组选择 -->
+      <label for="group">Group</label>
+      <select id="group" name="group">
+        <option value="non-therapist">Non-Therapist</option>
+        <option value="therapist">Therapist</option>
+      </select>
+      
+      <label for="password">Password</label>
+      <input
+        id="password"
+        name="password"
+        type="password"
+        placeholder="Create a password"
+        autocomplete="new-password"
+        required
+      />
+
+      <div class="actions">
+        <button id="registerBtn" type="button">Register Account</button>
+      </div>
+    </form>
+
+    <div class="links">
+      <a href="login.html">Back to login</a>
+    </div>
+  </main>
+
+  <!-- 统一前端逻辑（如果你有 app.js，会优先使用其中的 window.register） -->
+  <script src="/app.js"></script>
+
+  <!-- 兜底：app.js 没有提供 window.register 时使用 -->
+  <script>
+    if (!window.register) {
+      document.getElementById('registerBtn').addEventListener('click', async () => {
+        const username = document.getElementById('username').value.trim();
+        const name     = document.getElementById('name').value.trim();
+        const password = document.getElementById('password').value.trim();
+        const group    = document.getElementById('group').value || 'non-therapist';
+
+        if (!username || !password || !name) {
+          alert('All fields are required.');
+          return;
+        }
+        try {
+          const res = await fetch('/api/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password, name, group })
+          });
+
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.message || 'Register failed');
+          alert('✅ Registration successful! Please login.');
+          window.location.href = 'login.html';
+        } catch (e) {
+          alert(e.message);
+        }
+      });
+    }
+  </script>
+</body>
+</html>

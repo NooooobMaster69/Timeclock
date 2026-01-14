@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>360WPT TimeClock</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: linear-gradient(to bottom right, #eef2ff, #e0e7ff);
+      margin: 0;
+      padding: 0;
+      color: #222;
+    }
+
+    h1 {
+      text-align: center;
+      margin-top: 30px;
+      color: #1e40af;
+    }
+
+    .container {
+  width: 85%;          /* 统一宽度，手机也更满一点 */
+  max-width: 900px;
+  margin: 20px auto;
+  background: white;
+  padding: 24px 24px 22px;
+  border-radius: 22px;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.12);
+}
+
+/* 顶部欢迎卡片 */
+#welcomeCard {
+  width: 85%;          /* ✅ 和 .container 一样宽 */
+  max-width: 900px;
+  margin: -10px auto 20px;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #60a5fa, #3b82f6);
+  border-radius: 18px;
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 6px 18px rgba(37, 99, 235, .35);
+  animation: fadeIn .6s ease-out;
+}
+    #welcomeEmoji {
+      font-size: 38px;
+    }
+    #hello {
+      font-size: 22px;
+      font-weight: 700;
+    }
+    #hello-date {
+      font-size: 14px;
+      opacity: .9;
+      margin-top: 2px;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* 标题 */
+    h2 {
+      margin-top: 0;
+      margin-bottom: 14px;
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* 当前工作状态条 */
+    .status-card {
+      display: flex;
+      align-items: center;
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: #f1f5ff;
+      border: 1px solid #e0e7ff;
+      margin-bottom: 18px;
+    }
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: #22c55e;
+      margin-right: 10px;
+      flex-shrink: 0;
+    }
+    .status-label {
+      font-weight: 600;
+    }
+    .status-sub {
+      font-size: 13px;
+      color: #6b7280;
+    }
+.label-short{ display:none; }
+
+    /* 按钮行 */
+    .btn-row {
+      display: flex;
+      justify-content: center;
+      gap: 18px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+/* Rest 行：更窄一点，别占太多空间 */
+.btn-row.rest-row{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;            /* 稍微收紧 */
+  max-width: 380px;     /* ✅ 这里控制“整行宽度”，你想更窄可用 440 */
+  margin: 0 auto 14px;
+}
+
+/* Rest 行按钮：稍微收一点内边距，且不允许文字乱换行 */
+.btn-row.rest-row button{
+  width: 100%;
+  padding: 10px 14px;   /* ✅ 只影响 rest 行，不会影响其它行 */
+  white-space: nowrap;  /* ✅ 避免 “Start Rest Break” 被挤成两行 */
+}
+
+/* Paid badge 不要被压扁/换行 */
+.paid-badge{
+  flex-shrink: 0;
+}
+
+/* 更小屏再改成一列（避免两列太挤） */
+/* 手机：用短字，保持两列，不要强制变一列 */
+@media (max-width: 430px){
+  .label-full{ display:none; }
+  .label-short{ display:inline; }
+
+  .btn-row.rest-row{
+    grid-template-columns: 1fr 1fr; /* ✅ 手机也保持两列 */
+    max-width: 100%;
+    gap: 12px;
+  }
+
+  .btn-row.rest-row button{
+    padding: 10px 12px;
+    font-size: 14px;
+    white-space: nowrap; /* ✅ 防止又被挤换行 */
+  }
+}
+
+/* 极小屏才改一列（可选） */
+@media (max-width: 320px){
+  .btn-row.rest-row{
+    grid-template-columns: 1fr;
+  }
+}
+
+
+
+
+.logout-btn {
+  border-radius: 999px;
+  border: 1px solid rgba(248, 250, 252, 0.85);
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  background: rgba(15, 23, 42, 0.2);
+  color: #f9fafb;
+  cursor: pointer;
+  box-shadow: none;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+.logout-btn:hover {
+  background: rgba(15, 23, 42, 0.3);
+  transform: translateY(-1px);
+}
+.logout-btn:active {
+  transform: translateY(0);
+}
+
+    button {
+      padding: 10px 18px;
+      border: none;
+      border-radius: 12px;
+      color: white;
+      cursor: pointer;
+      font-size: 15px;
+      transition: .15s;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+    }
+    button:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(15,23,42,0.16); }
+    button:active { transform: translateY(0); box-shadow: 0 3px 10px rgba(15,23,42,0.12); }
+
+    .blue   { background: #2563eb; }
+    .green  { background: #16a34a; }
+    .orange { background: #f97316; }
+    .purple { background: #7c3aed; }
+    .black  { background: #1e293b; }
+    .red    { background: #dc2626; }
+
+    /* disabled 状态统一处理 */
+    button[disabled] {
+      background: #cbd5e1 !important;
+      cursor: not-allowed !important;
+      transform: none !important;
+      opacity: .75;
+      box-shadow: none;
+    }
+/* Start Rest Break 按钮里的 Paid badge */
+.rest-start{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.paid-badge{
+  font-size: 12px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.22);
+  border: 1px solid rgba(255,255,255,0.35);
+  line-height: 1.2;
+}
+
+button[disabled] .paid-badge{
+  opacity: 0.85;
+}
+
+    /* Rest 提示 */
+    .rest-block {
+      text-align: center;
+      margin-top: 4px;
+    }
+    .rest-hint {
+  color: #6b7280;
+      font-size: 12px;
+      margin-top: 4px;
+      opacity: 0.9;
+    }
+
+    /* Summary 区域中的按钮 */
+    .summary-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .summary-buttons button {
+      flex: 1 1 160px;
+    }
+/* 手机端优化 Summary Zone 按钮大小 */
+@media (max-width: 600px) {
+  .summary-buttons {
+    justify-content: center;   /* 把按钮整体居中 */
+  }
+
+  .summary-buttons button {
+    flex: 0 0 78%;            /* 不再自动占满整行，固定在 70–80% 左右 */
+    max-width: 280px;         /* 上限，避免太大 */
+    font-size: 14px;          /* 字体稍微小一点，没那么“憨” */
+    padding: 10px 14px;       /* 内边距也稍微收一点 */
+  }
+}
+
+    /* Custom range 区域 */
+    .custom-range {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px dashed #e2e8f0;
+  font-size: 14px;
+  display: flex;             /* ✅ 按行排版 */
+  flex-wrap: wrap;           /* 小屏自动换行 */
+  align-items: center;
+  gap: 6px;
+}
+.custom-range input[type="date"] {
+  padding: 5px 7px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  font-size: 13px;
+}
+@media (max-width: 480px) {
+  /* Summary 三个按钮：竖着排，但不要“顶满”整行 */
+  .summary-buttons {
+    flex-direction: column;   /* 一列 */
+    align-items: center;      /* 居中 */
+  }
+  .summary-buttons button {
+    width: 80%;               /* ✅ 不再 100% 了 */
+    max-width: 260px;         /* 上限 */
+  }
+}
+
+
+
+    /* Recent records 列表 */
+    #log {
+      max-height: 320px;
+      overflow-y: auto;
+      margin-top: 10px;
+      padding-right: 4px;
+      font-size: 14px;
+    }
+
+    /* Admin 区域 */
+    #adminZone {
+      margin-top: 18px;
+      padding-top: 10px;
+      border-top: 1px dashed #cbd5e1;
+      display: none; /* 默认隐藏，只对 admin 打开 */
+      font-size: 14px;
+    }
+
+    /* Pay period 状态条 */
+    .pay-period-bar {
+      display: none;            /* 默认隐藏，等 JS 判断是员工再显示 */
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      margin-bottom: 10px;
+      border-radius: 999px;
+      background: #eff6ff;
+      border: 1px dashed #bfdbfe;
+      font-size: 14px;
+      color: #1e3a8a;
+    }
+    .pay-period-badge {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: #dbeafe;
+      color: #1d4ed8;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+    .pay-period-range {
+      font-weight: 500;
+    }
+
+        /* ---- 全局 toast 气泡 ---- */
+    #toast {
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      display: inline-block;
+width: fit-content;
+max-width: min(640px, calc(100vw - 32px)); /* 上限放宽一点，但不会强行变宽 */
+min-width: 300px;
+
+/* ✅ 关键：左右留白加大，立刻“不挤”，但不会产生巨大空白 */
+padding: 12px 22px;
+
+      background: #111827;
+      color: #f9fafb;
+      font-size: 14px;
+      border-radius: 999px;
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.35);
+      opacity: 0;
+      transform: translateY(10px);
+      pointer-events: none;
+      transition: opacity .25s ease, transform .25s ease;
+      z-index: 9999;
+      line-height: 1.4;
+      text-align: left;
+      white-space: pre-line; /* 支持 \n 换行 */
+    }
+
+    #toast.show {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+
+
+  </style>
+</head>
+<body>
+
+<h1>360WPT TimeClock</h1>
+
+<!-- 顶部欢迎卡片 -->
+<div id="welcomeCard">
+  <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+    <div style="display:flex; align-items:center; gap:16px;">
+      <div id="welcomeEmoji">👋</div>
+      <div>
+        <div id="hello"></div>
+        <div id="hello-date"></div>
+      </div>
+    </div>
+
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </div>
+</div>
+
+
+<!-- 员工打卡区域（admin 会被 JS 隐藏） -->
+<div class="container" id="clockContainer">
+  <h2>🕒 Clocking Zone</h2>
+
+  <!-- 当前状态 -->
+  <div class="status-card">
+    <div class="status-dot" id="statusDot"></div>
+    <div>
+      <div class="status-label" id="statusText">Loading status…</div>
+      <div class="status-sub">Your current work status</div>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="blue" onclick="clock('CLOCK_IN')">Clock In</button>
+    <button class="blue" onclick="clock('CLOCK_OUT')">Clock Out</button>
+  </div>
+
+  <div class="btn-row">
+    <button class="green" onclick="clock('MEAL_IN')">Start Lunch Break</button>
+    <button class="green" onclick="clock('MEAL_OUT')">End Lunch Break</button>
+  </div>
+
+<div class="rest-block">
+  <div class="btn-row rest-row">
+    <button class="orange rest-start" id="restBtn" onclick="clock('REST_IN')">
+      <span class="label-full">Start Rest Break</span>
+      <span class="label-short">Start Rest</span>
+      <span class="paid-badge">Paid</span>
+    </button>
+
+    <button class="orange" id="restOutBtn" onclick="clock('REST_OUT')">
+      <span class="label-full">End Rest Break</span>
+      <span class="label-short">End Rest</span>
+    </button>
+  </div>
+</div>
+
+
+<!-- Summary / Export / Records（admin/employee 共用） -->
+<div class="container">
+  <h2 id="summaryTitle">📊 Summary Zone</h2>
+  <div class="pay-period-bar" id="payPeriodBar">
+    <span class="pay-period-badge" id="payPeriodLabel">Current pay period</span>
+    <span class="pay-period-range" id="payPeriodRange">Loading…</span>
+  </div>
+<div class="summary-buttons" id="employeeSummaryButtons">
+  <button class="purple" onclick="viewSummary()">View Hours This Period</button>
+  <button class="black"  onclick="exportMyCurrent()">Export Current Period</button>
+  <button class="black"  onclick="exportMyAll()">Export All History</button>
+</div>
+
+<div class="custom-range" id="employeeCustomRange">
+  <span>Custom range (me):</span>
+  <input type="date" id="myRangeStart" />
+  <span>to</span>
+  <input type="date" id="myRangeEnd" />
+  <button class="black" onclick="exportMyCustom()">Export</button>
+</div>
+
+
+
+  <!-- Recent records：普通员工显示，admin 会被 JS 隐藏 -->
+  <div id="log"></div>
+
+  <!-- Admin only 导出 -->
+  <div id="adminZone">
+    <h3>👑 Admin Zone</h3>
+
+    <div style="margin-bottom:8px;">
+      <label for="adminEmployeeSelect" style="margin-right:4px;">Employee:</label>
+      <select id="adminEmployeeSelect" style="padding:4px 6px; border-radius:6px; border:1px solid #cbd5e1;">
+        <option value="">All employees</option>
+      </select>
+    </div>
+
+    <div class="summary-buttons" style="margin-bottom: 6px;">
+      <button class="purple" onclick="adminExportCurrent()">Export Current Period</button>
+      <button class="black"  onclick="adminExportAll()">Export All History</button>
+    </div>
+
+    <div class="custom-range" style="border-top:none; padding-top:0; margin-top:4px;">
+      <div style="margin-bottom: 4px;">Custom range (admin):</div>
+      <input type="date" id="adminRangeStart" />
+      <span style="margin: 0 4px;">to</span>
+      <input type="date" id="adminRangeEnd" />
+      <button class="black" style="margin-left: 6px;" onclick="adminExportCustom()">Export</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<!-- 前端逻辑 -->
+<script src="/app.js"></script>
+
+</body>
+</html>

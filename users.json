@@ -1,0 +1,140 @@
+[
+  {
+    "username": "admin",
+    "password": "$2b$10$oje3KJ5AUNAstqhS/oUpI.KYbybh6YADgkm3cxW3XjS37JHqLlSY2",
+    "role": "admin",
+    "name": "360WPT Admin"
+  },
+  {
+    "username": "Qiushi Lyu",
+    "password": "$2b$10$fVbSN/9H4qjXIOn.QI351usiz.gIgJd7IVv4oRHTaj9LDo45b9FHO",
+    "employee": "121398",
+    "role": "employee"
+  },
+  {
+    "username": "lqs005",
+    "password": "$2b$10$HHv2j2ZBAgR2dzfruCLls.4tQw/83TMtppisgNXoufQbWsHR6q/i2",
+    "role": "employee",
+    "employee": "lqs005",
+    "name": "qiushi lv"
+  },
+  {
+    "username": "User test",
+    "password": "$2b$10$ZHOQpx/A/wxpKZpNgJ4iL.PdQIsmuO4t4XYEQIjF.FIbtha5z7twm",
+    "role": "employee",
+    "employee": "User test",
+    "name": "User name test"
+  },
+  {
+    "username": "User1",
+    "password": "$2b$10$kpVkuekuNrbjT028921cx.fDpgXHcQM5Y1qj8GFgDNgy98ectfsM6",
+    "role": "employee",
+    "employee": "User1",
+    "name": "User test 1"
+  },
+  {
+    "username": "User test 2",
+    "password": "$2b$10$61hg0fo.wGgl4WwHE0kUA.AwD..wnJtS6A2bdRKkBUWLeCcFsZC6K",
+    "role": "employee",
+    "employee": "User test 2",
+    "name": "User name 2"
+  },
+  {
+    "username": "User 3",
+    "password": "$2b$10$TJm55nojCFr24WwVRKT7OeddHbl/vFC715kv4GmHIDmET6OdJtwhG",
+    "role": "employee",
+    "employee": "User 3",
+    "name": "User name 3"
+  },
+  {
+    "username": "user 4",
+    "password": "$2b$10$eXVXwhkmhejR1V3oNuM0DOYPp/dclUHn2cRPvV.CVK0lfrDRnofn6",
+    "role": "employee",
+    "employee": "user 4",
+    "name": "username 4"
+  },
+  {
+    "username": "Yuno",
+    "password": "$2b$10$tyJupIre.4WnP7S4D0UENeFfk/7GDjv0iKscy5iNVOOQSDFcxwwVa",
+    "role": "employee",
+    "employee": "Yuno",
+    "name": "Elaine Ngo"
+  },
+  {
+    "username": "Gargi",
+    "password": "$2b$10$CHvX/3pD0Psk3AkOGh03ke/XDOjYyuE5aAgAR4Y5XlAa7EdFZ4G2O",
+    "role": "employee",
+    "employee": "Gargi",
+    "name": "Tarani"
+  },
+  {
+    "username": "Iris",
+    "password": "$2b$10$E4HMVCR5soSbSAttjEd0tucM6bdEroLhghl5yJ/GcBfCr2yad/zV6",
+    "role": "employee",
+    "employee": "Iris",
+    "name": "Yuxinqu"
+  },
+  {
+    "username": "Lu",
+    "password": "$2b$10$KI3HnI0MlN0eiDvaqjbKq.dKVllr1ezkElp7pDzKIwigES38FVdam",
+    "role": "employee",
+    "employee": "Lu",
+    "name": "Lu Yurong"
+  },
+  {
+    "username": "Aids Test 1",
+    "password": "$2b$10$iYdd1ETm8rw.D1eKBSKFoe51Gw0fDUDcf3WwLLei0Mwy1Tx62HoRe",
+    "role": "employee",
+    "employee": "Aids Test 1",
+    "name": "Aid 1",
+    "group": "non-therapist"
+  },
+  {
+    "username": "PT1",
+    "password": "$2b$10$JBaBu6qX9WLf3EEZOqc9T.bLkwzN./AKO9WP3yQ1zTOv4UqzGFwFu",
+    "role": "employee",
+    "employee": "PT1",
+    "name": "PT1",
+    "group": "therapist"
+  },
+  {
+    "username": "Test1",
+    "password": "$2b$10$JKhdgDEAD7X3ShtqcqbHX.28VI4H2r0EpcloZw1yM218sTxD3AUtK",
+    "role": "employee",
+    "employee": "Test1",
+    "name": "A  B",
+    "group": "non-therapist"
+  },
+  {
+    "username": "Test",
+    "password": "$2b$10$YiT11Uudwidg6tllKgiPiONS2d2zOTs0ioHwi/9zyL63mvXif5vBu",
+    "role": "employee",
+    "employee": "Test",
+    "name": "A B",
+    "group": "non-therapist"
+  },
+  {
+    "username": "Yuming",
+    "password": "$2b$10$W7OleWYHlaYkKzWv4ELCf.ZARmSgXkz.o0KgLT3/tzfEq1b4WyBKe",
+    "role": "employee",
+    "employee": "Yuming",
+    "name": "lyu",
+    "group": "non-therapist"
+  },
+  {
+    "username": "Oudy",
+    "password": "$2b$10$aaFa82E/luWThT/9A3vcBers/h2S8uXG/bIwSCburxkc/r1JD.Py6",
+    "role": "employee",
+    "employee": "Oudy",
+    "name": "Oudy Mao",
+    "group": "non-therapist"
+  },
+  {
+    "username": "hello",
+    "password": "$2b$10$nWIKXnYNy5iQAGsKwSmLKOefXciIu5NgY0zuoC7kcstWq4gy3.Hq.",
+    "role": "employee",
+    "employee": "hello",
+    "name": "asdf",
+    "group": "non-therapist"
+  }
+]
