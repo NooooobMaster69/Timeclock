@@ -1,0 +1,19 @@
+[
+  {
+    "id": "mkeqla7q_zbiaam",
+    "employee": "lqs005",
+    "date": "2026-01-13",
+    "clockIn": "08:00",
+    "clockOut": "17:00",
+    "mealIn": "12:30",
+    "mealOut": "13:30",
+    "restIn": "14:40",
+    "restOut": "14:50",
+    "note": "test",
+    "status": "pending",
+    "submittedAt": "2026-01-15T00:54:06.326Z",
+    "reviewedAt": "",
+    "reviewedBy": "",
+    "decisionNote": ""
+  }
+]
