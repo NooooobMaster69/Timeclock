@@ -11,6 +11,7 @@ const PORT = 3000;
 // ---- Files ----
 const USERS_FILE = path.join(__dirname, "users.json");
 const RECORDS_FILE = path.join(__dirname, "records.json");
+const MISSED_FILE = path.join(__dirname, "missed_punch.json");
 
 // ---- Middleware ----
 app.use(express.json());
@@ -55,6 +56,7 @@ ensureFile(
 );
 
 ensureFile(RECORDS_FILE, "[]");
+ensureFile(MISSED_FILE, "[]");
 
 
 // ---- Helpers ----
@@ -62,6 +64,8 @@ const readUsers = () => JSON.parse(fs.readFileSync(USERS_FILE));
 const writeUsers = (u) => fs.writeFileSync(USERS_FILE, JSON.stringify(u, null, 2));
 const readRecords = () => JSON.parse(fs.readFileSync(RECORDS_FILE));
 const writeRecords = (r) => fs.writeFileSync(RECORDS_FILE, JSON.stringify(r, null, 2));
+const readMissed = () => JSON.parse(fs.readFileSync(MISSED_FILE));
+const writeMissed = (m) => fs.writeFileSync(MISSED_FILE, JSON.stringify(m, null, 2));
 
 function requireLogin(req, res, next) {
   if (!req.session.user) return res.status(401).json({ message: "Not logged in" });
@@ -95,13 +99,40 @@ function getPayPeriodRange(date = new Date()) {
 }
 
 
-// 根据员工所有记录推导当前状态（更稳，不仅看最后一条）
-function computeState(records) {
+function computeState(records, now = new Date()) {
   let clockedIn = false;
   let inMeal = false;
   let inRest = false;
 
-  for (const r of records.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))) {
+  // Map<ymd, Set<missingType>>
+  const missedMap = new Map();
+
+  const sorted = [...records].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+  let lastYmd = null;
+
+  function markMissed(ymd) {
+    if (!ymd) return;
+    const miss = new Set(missedMap.get(ymd) || []);
+    if (inMeal) miss.add("MEAL_OUT");
+    if (inRest) miss.add("REST_OUT");
+    if (clockedIn) miss.add("CLOCK_OUT");
+    if (miss.size > 0) missedMap.set(ymd, miss);
+
+    // 跨天就软重置，避免第二天被卡住
+    clockedIn = false;
+    inMeal = false;
+    inRest = false;
+  }
+
+  for (const r of sorted) {
+    const ymd = localYMD(r.timestamp);
+
+    if (lastYmd && ymd !== lastYmd) {
+      // 从 lastYmd 跨到了新的一天：如果上一天没收口，就记 missed
+      if (clockedIn || inMeal || inRest) markMissed(lastYmd);
+    }
+    lastYmd = ymd;
+
     switch (r.type) {
       case "CLOCK_IN":
         if (!clockedIn && !inMeal && !inRest) clockedIn = true;
@@ -123,8 +154,20 @@ function computeState(records) {
         break;
     }
   }
-  return { clockedIn, inMeal, inRest };
+
+  // 关键：就算今天没有任何新记录，只要 now 已经是新的一天，也要把昨天 open 的状态记为 missed 并 reset
+  const todayYmd = localYMD(now);
+  if (lastYmd && todayYmd !== lastYmd && (clockedIn || inMeal || inRest)) {
+    markMissed(lastYmd);
+  }
+
+  const missedDays = Array.from(missedMap.entries())
+    .map(([date, set]) => ({ date, missing: Array.from(set).sort() }))
+    .sort((a, b) => a.date.localeCompare(b.date));
+
+  return { clockedIn, inMeal, inRest, missedDays };
 }
+
 function nameOf(employee) {
   const users = readUsers();
   const u = users.find(
@@ -185,6 +228,61 @@ function localYMD(ts) {
 function localHM(ts) {
   const d = new Date(ts);
   return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function isValidYMD(s) {
+  return /^\d{4}-\d{2}-\d{2}$/.test(String(s || ""));
+}
+function isValidHM(s) {
+  if (!/^\d{2}:\d{2}$/.test(String(s || ""))) return false;
+  const [hh, mm] = s.split(":").map(Number);
+  return hh >= 0 && hh <= 23 && mm >= 0 && mm <= 59;
+}
+function ymdToParts(ymd) {
+  const [Y, M, D] = ymd.split("-").map(Number);
+  return { Y, M, D };
+}
+function hmToParts(hm) {
+  const [h, m] = hm.split(":").map(Number);
+  return { h, m };
+}
+function localDateTimeMs(ymd, hm) {
+  const { Y, M, D } = ymdToParts(ymd);
+  const { h, m } = hmToParts(hm);
+  return new Date(Y, M - 1, D, h, m, 0, 0).getTime(); // 本地时区
+}
+function computeHoursFromMissed(mp) {
+  // 必填：clockIn / clockOut
+  const inMs = localDateTimeMs(mp.date, mp.clockIn);
+  const outMs = localDateTimeMs(mp.date, mp.clockOut);
+  let workMin = (outMs - inMs) / 60000;
+  if (workMin < 0) workMin += 24 * 60; // 理论上你们不会跨夜，但加个兜底
+  if (workMin <= 0 || workMin > 20 * 60) return null;
+
+  let lunchMin = 0;
+  if (mp.mealIn && mp.mealOut) {
+    const mi = localDateTimeMs(mp.date, mp.mealIn);
+    const mo = localDateTimeMs(mp.date, mp.mealOut);
+    let m = (mo - mi) / 60000;
+    if (m < 0) m += 24 * 60;
+    if (m > 0 && m <= 6 * 60) lunchMin = m;
+  }
+
+  let restMin = 0;
+  if (mp.restIn && mp.restOut) {
+    const ri = localDateTimeMs(mp.date, mp.restIn);
+    const ro = localDateTimeMs(mp.date, mp.restOut);
+    let r = (ro - ri) / 60000;
+    if (r < 0) r += 24 * 60;
+    if (r > 0 && r <= 3 * 60) restMin = r;
+  }
+
+  const workH = +(workMin / 60).toFixed(2);
+  const lunchH = +(lunchMin / 60).toFixed(2);
+  const restH = +(restMin / 60).toFixed(2);
+  const payableH = +(Math.max(0, workH - lunchH)).toFixed(2);
+
+  return { workHours: workH, lunchHours: lunchH, restHours: restH, payableHours: payableH };
 }
 
 /** 把记录按 “employee + 本地日期(yyyy-mm-dd)” 分组，并计算每日汇总 */
@@ -347,19 +445,28 @@ app.get("/api/state", requireLogin, (req, res) => {
   const all = readRecords();
   const u = req.session.user;
 
-  const mine = u.role === "employee"
-    ? all.filter(r => r.employee === u.employee)
-    : all;
+ const mine = u.role === "employee" ? all.filter(r => r.employee === u.employee) : [];
+const state = computeState(mine, new Date());
 
-  const state = computeState(u.role === "employee" ? mine : []);
 
   const users = readUsers();
   const me = users.find(x => x.username === u.username);
   const displayName = me?.name || "";
   const group = me?.group || "non-therapist";   // ✅ 没有就默认 non-therapist
 
+  // 只给前端当前 pay period 内的 missedDays（避免提示太多历史）
+const { periodStart, periodEnd } = getPayPeriodRange(new Date());
+const startYmd = localYMD(periodStart);
+const endYmd = localYMD(periodEnd);
+
+const missedDaysInPeriod = (state.missedDays || []).filter(x => x.date >= startYmd && x.date <= endYmd);
+
   res.json({
-    ...state,
+  clockedIn: state.clockedIn,
+inMeal: state.inMeal,
+inRest: state.inRest,
+missedDays: missedDaysInPeriod,
+
     role: u.role,
     employee: u.employee,
     username: u.username,
@@ -405,7 +512,7 @@ app.get("/api/records", requireLogin, (req, res) => {
 
 // 记一条打卡记录（基于当前状态校验序列合法）
 app.post("/api/record", requireLogin, (req, res) => {
-  const { type, timestamp } = req.body || {};
+  const { type } = req.body || {};
   const u = req.session.user;
 
   if (u.role !== "employee" && u.role !== "admin") {
@@ -420,7 +527,8 @@ app.post("/api/record", requireLogin, (req, res) => {
   const mine = all
     .filter((r) => r.employee === u.employee)
     .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-  const state = computeState(mine);
+  const state = computeState(mine, new Date());
+
 
   // ✅ 读出当前用户的 group（老用户没有 group 时默认 non-therapist）
   const users = readUsers();
@@ -480,14 +588,146 @@ case "REST_IN":
   }
 
   all.push({
-    employee: u.employee,
-    type,
-    timestamp: timestamp || new Date().toISOString(),
-  });
+  employee: u.employee,
+  type,
+  timestamp: new Date().toISOString(), // ✅ 一律用服务器时间
+});
   writeRecords(all);
   res.json({ success: true });
 });
 
+function requireAdmin(req, res, next) {
+  if (!req.session.user || req.session.user.role !== "admin") {
+    return res.status(403).json({ message: "Forbidden" });
+  }
+  next();
+}
+
+// 员工提交 Missed Punch Request
+app.post("/api/missed_punch", requireLogin, (req, res) => {
+  const u = req.session.user;
+  if (u.role !== "employee") return res.status(403).json({ message: "Forbidden" });
+
+  const users = readUsers();
+  const me = users.find(x => x.username === u.username);
+  const group = me?.group || "non-therapist";
+
+  const body = req.body || {};
+  const mp = {
+    employee: u.employee,
+    date: String(body.date || "").trim(),
+    clockIn: String(body.clockIn || "").trim(),
+    clockOut: String(body.clockOut || "").trim(),
+    mealIn: body.mealIn ? String(body.mealIn).trim() : "",
+    mealOut: body.mealOut ? String(body.mealOut).trim() : "",
+    restIn: body.restIn ? String(body.restIn).trim() : "",
+    restOut: body.restOut ? String(body.restOut).trim() : "",
+    note: body.note ? String(body.note).trim() : ""
+  };
+
+  // 基础校验
+  if (!isValidYMD(mp.date)) return res.status(400).json({ message: "Invalid date (YYYY-MM-DD)" });
+  if (!isValidHM(mp.clockIn) || !isValidHM(mp.clockOut)) {
+    return res.status(400).json({ message: "clockIn/clockOut required (HH:MM)" });
+  }
+
+  // meal 成对
+  const hasMealIn = !!mp.mealIn;
+  const hasMealOut = !!mp.mealOut;
+  if (hasMealIn !== hasMealOut) {
+    return res.status(400).json({ message: "mealIn and mealOut must be both filled or both empty." });
+  }
+  if (hasMealIn && (!isValidHM(mp.mealIn) || !isValidHM(mp.mealOut))) {
+    return res.status(400).json({ message: "Invalid meal time (HH:MM)" });
+  }
+
+  // rest 成对 + therapist 禁止
+  const hasRestIn = !!mp.restIn;
+  const hasRestOut = !!mp.restOut;
+  if (hasRestIn !== hasRestOut) {
+    return res.status(400).json({ message: "restIn and restOut must be both filled or both empty." });
+  }
+  if (hasRestIn && (!isValidHM(mp.restIn) || !isValidHM(mp.restOut))) {
+    return res.status(400).json({ message: "Invalid rest time (HH:MM)" });
+  }
+  if (group === "therapist" && (hasRestIn || hasRestOut)) {
+    return res.status(400).json({ message: "Rest break is disabled for therapists." });
+  }
+
+  // 计算一下是否合理（防止 out 早于 in 等）
+  const hours = computeHoursFromMissed(mp);
+  if (!hours) return res.status(400).json({ message: "Invalid time range in request." });
+
+  const all = readMissed();
+  const id = `${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+
+  all.push({
+    id,
+    ...mp,
+    status: "pending",
+    submittedAt: new Date().toISOString(),
+    reviewedAt: "",
+    reviewedBy: "",
+    decisionNote: ""
+  });
+  writeMissed(all);
+
+  res.json({ success: true, id });
+});
+
+// 查询 Missed Punch（员工只能看自己；管理员可看全部并筛选）
+app.get("/api/missed_punch", requireLogin, (req, res) => {
+  const u = req.session.user;
+  const { status, employee, range = "all", start, end } = req.query || {};
+
+  let list = readMissed();
+
+  if (u.role === "employee") {
+    list = list.filter(x => x.employee === u.employee);
+  } else if (u.role === "admin") {
+    if (employee) list = list.filter(x => x.employee === employee);
+  } else {
+    return res.status(403).json({ message: "Forbidden" });
+  }
+
+  if (status) list = list.filter(x => x.status === status);
+
+  // range 过滤（all / current / custom）
+  if (range === "current") {
+    const { periodStart, periodEnd } = getPayPeriodRange(new Date());
+    const s = localYMD(periodStart);
+    const e = localYMD(periodEnd);
+    list = list.filter(x => x.date >= s && x.date <= e);
+  } else if (range === "custom" && start && end && isValidYMD(start) && isValidYMD(end)) {
+    list = list.filter(x => x.date >= start && x.date <= end);
+  }
+
+  // 新到旧
+  list.sort((a, b) => (b.submittedAt || "").localeCompare(a.submittedAt || ""));
+  res.json(list);
+});
+
+// 管理员审批/拒绝
+app.post("/api/missed_punch/:id/review", requireLogin, requireAdmin, (req, res) => {
+  const { id } = req.params;
+  const { action, note } = req.body || {};
+
+  if (action !== "approve" && action !== "deny") {
+    return res.status(400).json({ message: "action must be approve or deny" });
+  }
+
+  const all = readMissed();
+  const idx = all.findIndex(x => x.id === id);
+  if (idx < 0) return res.status(404).json({ message: "Not found" });
+
+  all[idx].status = action === "approve" ? "approved" : "denied";
+  all[idx].reviewedAt = new Date().toISOString();
+  all[idx].reviewedBy = req.session.user.username;
+  all[idx].decisionNote = note ? String(note).trim() : "";
+
+  writeMissed(all);
+  res.json({ success: true });
+});
 
 // 双周汇总（服务器版本，可被前端调用；前端已内置客户端计算作为备份）
 app.get("/api/summary", requireLogin, (req, res) => {
@@ -503,45 +743,42 @@ app.get("/api/summary", requireLogin, (req, res) => {
     .map((r) => ({ ...r, t: new Date(r.timestamp).getTime() }))
     .filter((r) => r.t >= start && r.t <= end);
 
-  let workMin = 0, mealMin = 0, restMin = 0;
-  let clockIn = null, mealIn = null, restIn = null;
-
-  for (const r of rec) {
-    if (r.type === "CLOCK_IN") {
-      clockIn = r.t;
-    } else if (r.type === "CLOCK_OUT") {
-      if (clockIn != null) {
-        workMin += (r.t - clockIn) / 60000;
-        clockIn = null;
-      }
-    } else if (r.type === "MEAL_IN") {
-      mealIn = r.t;
-    } else if (r.type === "MEAL_OUT") {
-      if (mealIn != null) {
-        mealMin += (r.t - mealIn) / 60000;
-        mealIn = null;
-      }
-    } else if (r.type === "REST_IN") {
-      restIn = r.t;
-    } else if (r.type === "REST_OUT") {
-      if (restIn != null) {
-        restMin += (r.t - restIn) / 60000;
-        restIn = null;
-      }
-    }
-  }
-
-  const totalBreaks = (mealMin + restMin) / 60;
-  const totalHours  = (workMin - mealMin) / 60;  // ✅ 同样只扣 lunch
-
-
-  res.json({
-    periodStart: periodStart.toDateString(),
-    periodEnd: periodEnd.toDateString(),
-    totalHours: Math.max(0, Number(totalHours.toFixed(2))),
-    totalBreaks: Math.max(0, Number(totalBreaks.toFixed(2))),
+  // 先按 records 算每日汇总
+const daily = buildDailySummary(rec);
+const dayMap = new Map(); // date -> {workHours,lunchHours,restHours,payableHours}
+for (const d of daily) {
+  dayMap.set(d.date, {
+    workHours: d.workHours,
+    lunchHours: d.lunchHours,
+    restHours: d.restHours,
+    payableHours: d.payableHours
   });
+}
+
+// 再用 approved missed punch 覆盖对应日期（只覆盖当前 pay period）
+const approved = readMissed()
+  .filter(x => x.employee === u.employee && x.status === "approved" && x.date >= localYMD(periodStart) && x.date <= localYMD(periodEnd));
+
+for (const mp of approved) {
+  const hours = computeHoursFromMissed(mp);
+  if (!hours) continue;
+  dayMap.set(mp.date, hours);
+}
+
+let totalHours = 0;
+let totalBreaks = 0;
+for (const v of dayMap.values()) {
+  totalHours += v.payableHours;
+  totalBreaks += (v.lunchHours + v.restHours);
+}
+
+res.json({
+  periodStart: periodStart.toDateString(),
+  periodEnd: periodEnd.toDateString(),
+  totalHours: Math.max(0, Number(totalHours.toFixed(2))),
+  totalBreaks: Math.max(0, Number(totalBreaks.toFixed(2))),
 });
+}); // ✅ <—— 这一行必须加，结束 /api/summary
 
 // 导出：员工导出自己的“每日汇总”；管理员导出“所有员工每日汇总”（并附原始记录工作表）
 app.get("/api/export", requireLogin, async (req, res) => {
@@ -587,6 +824,57 @@ app.get("/api/export", requireLogin, async (req, res) => {
 
   // 日汇总
   const summary = buildDailySummary(dataset);
+// ===== 用 approved missed punch 覆盖 Summary 里的对应日期（同导出范围）=====
+const approvedAll = readMissed().filter(x => x.status === "approved");
+
+// 先把现有 summary 放进 Map，方便覆盖
+const sumMap = new Map(); // key = emp__date
+for (const row of summary) {
+  sumMap.set(`${row.employee}__${row.date}`, row);
+}
+
+// 导出范围对应的 date 边界（如果是 all，就不限制）
+let rangeStartYmd = null;
+let rangeEndYmd = null;
+if (startMs != null && endMs != null) {
+  rangeStartYmd = localYMD(startMs);
+  rangeEndYmd = localYMD(endMs);
+}
+
+
+
+const empSet = new Set(dataset.map(r => r.employee));
+
+for (const mp of approvedAll) {
+  if (!empSet.has(mp.employee)) continue;
+
+  if (rangeStartYmd && rangeEndYmd) {
+    if (mp.date < rangeStartYmd || mp.date > rangeEndYmd) continue;
+  }
+
+  const hours = computeHoursFromMissed(mp);
+  if (!hours) continue;
+
+  const key = `${mp.employee}__${mp.date}`;
+  const existing = sumMap.get(key);
+
+  const newRow = {
+    employee: mp.employee,
+    date: mp.date,
+    firstIn: mp.clockIn,
+    lastOut: mp.clockOut,
+    events: existing?.events ? (existing.events + " | ADJUSTED_BY_MISSED_PUNCH") : "ADJUSTED_BY_MISSED_PUNCH",
+    ...hours
+  };
+
+  sumMap.set(key, newRow);
+}
+
+// 用覆盖后的 Map 生成 summary 数组
+const summary2 = Array.from(sumMap.values()).sort((a, b) => {
+  if (a.employee === b.employee) return a.date.localeCompare(b.date);
+  return (a.employee || "").localeCompare(b.employee || "");
+});
 
   // ===== Excel（Summary + Records）=====
   const wb = new ExcelJS.Workbook();
@@ -605,7 +893,7 @@ app.get("/api/export", requireLogin, async (req, res) => {
 
   // 按员工分区
   const byEmp = new Map();
-  summary.forEach(r => {
+summary2.forEach(r => {
     if (!byEmp.has(r.employee)) byEmp.set(r.employee, []);
     byEmp.get(r.employee).push(r);
   });

@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>360WPT TimeClock</title>
   <style>
+
+
     body {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       background: linear-gradient(to bottom right, #eef2ff, #e0e7ff);
@@ -28,6 +30,9 @@
   border-radius: 22px;
   box-shadow: 0 8px 22px rgba(15, 23, 42, 0.12);
 }
+
+
+
 
 /* 顶部欢迎卡片 */
 #welcomeCard {
@@ -338,6 +343,205 @@ button[disabled] .paid-badge{
     .pay-period-range {
       font-weight: 500;
     }
+/* ===== Missed Punch banner (under pay period bar) ===== */
+.missed-card{
+  display:none; /* 默认隐藏，JS 检测到 missedDays 才显示 */
+  margin: 8px 0 14px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  border: 1px solid #fed7aa;
+  background: #fff7ed; /* 温和橙色提示 */
+}
+
+.missed-card-top{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap: 12px;
+}
+
+.missed-title{
+  font-weight: 800;
+  color: #9a3412;
+  font-size: 14px;
+  margin-bottom: 2px;
+}
+
+.missed-sub{
+  font-size: 13px;
+  color: #7c2d12;
+  opacity: .9;
+  line-height: 1.35;
+}
+
+.missed-items{
+  margin-top: 10px;
+  border-top: 1px dashed #fdba74;
+  padding-top: 10px;
+  display:flex;
+  flex-direction:column;
+  gap: 8px;
+}
+
+.missed-item{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 10px;
+}
+
+.missed-item-left{
+  display:flex;
+  flex-direction:column;
+  gap: 2px;
+}
+
+.missed-date{
+  font-weight: 700;
+  color:#9a3412;
+  font-size: 13px;
+}
+
+.missed-detail{
+  font-size: 12px;
+  color:#7c2d12;
+  opacity: .95;
+}
+
+.badge{
+  display:inline-flex;
+  align-items:center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  color: #0f172a;
+  margin-left: 6px;
+}
+
+.badge.pending{
+  border-color:#f59e0b;
+  background:#fffbeb;
+  color:#92400e;
+}
+.badge.approved{
+  border-color:#22c55e;
+  background:#f0fdf4;
+  color:#166534;
+}
+
+.btn-sm{
+  padding: 8px 12px;
+  font-size: 13px;
+  border-radius: 12px;
+}
+
+/* ===== Missed Punch Modal ===== */
+.mp-overlay{
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  display: none;              /* 默认隐藏 */
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  z-index: 9998;
+}
+.mp-overlay.show{ display:flex; }
+
+.mp-modal{
+  width: min(560px, 100%);
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 22px 60px rgba(15, 23, 42, 0.28);
+  padding: 16px 16px 14px;
+}
+
+.mp-header{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.mp-title{
+  font-weight: 800;
+  font-size: 16px;
+  color:#0f172a;
+}
+
+.mp-sub{
+  font-size: 13px;
+  color:#475569;
+  margin-top: 2px;
+  line-height: 1.35;
+}
+
+.mp-close{
+  background:#e2e8f0 !important;
+  color:#0f172a !important;
+  box-shadow:none !important;
+  padding: 6px 10px !important;
+  border-radius: 999px !important;
+  font-size: 13px !important;
+}
+
+.mp-error{
+  display:none;
+  margin: 10px 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background:#fef2f2;
+  border:1px solid #fecaca;
+  color:#991b1b;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.mp-grid{
+  display:grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 10px;
+}
+
+@media (max-width: 520px){
+  .mp-grid{ grid-template-columns: 1fr; }
+}
+
+.mp-field label{
+  display:block;
+  font-size: 12px;
+  font-weight: 700;
+  color:#334155;
+  margin: 2px 0 6px;
+}
+
+.mp-field input, .mp-field textarea{
+  width: 100%;
+  padding: 9px 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  font-size: 14px;
+  outline: none;
+}
+
+.mp-hint{
+  margin-top: 10px;
+  font-size: 12px;
+  color:#64748b;
+  line-height: 1.35;
+}
+
+.mp-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap: 10px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
 
         /* ---- 全局 toast 气泡 ---- */
     #toast {
@@ -373,7 +577,58 @@ padding: 12px 22px;
       pointer-events: auto;
     }
 
+/* =========================
+     Missed Punch Modal Layout
+     ========================= */
 
+  /* 让弹窗宽度自适应，不会挤出屏幕 */
+  #mpOverlay .mp-modal {
+    width: min(760px, calc(100vw - 32px));
+    max-width: 760px;
+    overflow-x: hidden;
+  }
+
+  /* 避免 padding/边框撑爆宽度 */
+  #mpOverlay .mp-modal,
+  #mpOverlay .mp-modal * {
+    box-sizing: border-box;
+  }
+
+  /* Date + Note：左窄右宽 */
+  .mp-grid-top {
+    display: grid;
+    grid-template-columns: 180px 1fr;
+    gap: 12px;
+  }
+
+  /* 两列（Clock In/Out、Lunch Start/End、Rest Start/End） */
+ .mp-grid-2{
+  display:grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px;
+}
+
+
+  /* 关键：允许子元素缩小，防止挤出 */
+  .mp-field {
+    min-width: 0;
+  }
+
+  /* 输入框永远填满容器，不写死宽度 */
+  .mp-field input,
+  .mp-field textarea,
+  .mp-field select {
+    width: 100%;
+    min-width: 0;
+  }
+
+  /* 小屏自动单列 */
+  @media (max-width: 640px) {
+    .mp-grid-top,
+    .mp-grid-2 {
+      grid-template-columns: 1fr;
+    }
+  }
   </style>
 </head>
 <body>
@@ -433,6 +688,7 @@ padding: 12px 22px;
     </button>
   </div>
 </div>
+</div> <!-- ✅ 结束 clockContainer -->
 
 
 <!-- Summary / Export / Records（admin/employee 共用） -->
@@ -442,6 +698,24 @@ padding: 12px 22px;
     <span class="pay-period-badge" id="payPeriodLabel">Current pay period</span>
     <span class="pay-period-range" id="payPeriodRange">Loading…</span>
   </div>
+<!-- Missed Punch banner：放在 pay period bar 下面 -->
+<div class="missed-card" id="missedPunchCard">
+  <div class="missed-card-top">
+    <div>
+      <div class="missed-title">⚠️ Missed punches detected</div>
+      <div class="missed-sub" id="missedPunchSubtitle">
+        Please submit a Missed Punch Request. An admin will review before payroll/export counts these hours.
+      </div>
+    </div>
+
+    <button class="purple btn-sm" id="mpOpenBtn" onclick="openMissedPunchModal()">
+      Missed Punch Request
+    </button>
+  </div>
+
+  <div class="missed-items" id="missedPunchItems"></div>
+</div>
+
 <div class="summary-buttons" id="employeeSummaryButtons">
   <button class="purple" onclick="viewSummary()">View Hours This Period</button>
   <button class="black"  onclick="exportMyCurrent()">Export Current Period</button>
@@ -484,6 +758,91 @@ padding: 12px 22px;
       <input type="date" id="adminRangeEnd" />
       <button class="black" style="margin-left: 6px;" onclick="adminExportCustom()">Export</button>
     </div>
+    <!-- Admin: Missed Punch Requests (Pending) -->
+<div id="adminMissedPunchPanel" style="margin-top:14px;">
+  <div style="font-weight:800; margin: 10px 0 8px;">📝 Missed Punch Requests (Pending)</div>
+  <div id="adminMissedPunchList" style="display:flex; flex-direction:column; gap:10px;"></div>
+</div>
+
+  </div>
+</div>
+<!-- Missed Punch Modal（默认隐藏，JS 控制 show/hide） -->
+<div class="mp-overlay" id="mpOverlay">
+  <div class="mp-modal">
+    <div class="mp-header">
+      <div>
+        <div class="mp-title">Missed Punch Request</div>
+        <div class="mp-sub">
+          Fill in the correct times for the missed day. Lunch/rest must be entered in pairs. Rest is disabled for therapists.
+        </div>
+      </div>
+      <button class="mp-close" type="button" onclick="closeMissedPunchModal()">✕</button>
+    </div>
+
+    <div class="mp-error" id="mpErrorBox"></div>
+
+    <form id="mpForm" onsubmit="submitMissedPunch(event)">
+   <!-- Date + Note -->
+<div class="mp-grid-top">
+  <div class="mp-field">
+    <label>Date</label>
+    <input type="date" id="mpDate" required />
+  </div>
+
+  <div class="mp-field">
+    <label>Note (optional)</label>
+    <input type="text" id="mpNote" placeholder="e.g., Forgot to clock out" />
+  </div>
+</div>
+
+<!-- Clock In / Clock Out -->
+<div class="mp-grid-2" style="margin-top:10px;">
+  <div class="mp-field">
+    <label>Clock In</label>
+    <input type="time" id="mpClockIn" required />
+  </div>
+
+  <div class="mp-field">
+    <label>Clock Out</label>
+    <input type="time" id="mpClockOut" required />
+  </div>
+</div>
+
+<!-- Lunch Start / Lunch End -->
+<div class="mp-grid-2" style="margin-top:10px;">
+  <div class="mp-field">
+    <label>Lunch Start</label>
+    <input type="time" id="mpMealIn" />
+  </div>
+
+  <div class="mp-field">
+    <label>Lunch End</label>
+    <input type="time" id="mpMealOut" />
+  </div>
+</div>
+
+<!-- Rest Start / Rest End -->
+<div class="mp-grid-2" style="margin-top:10px;">
+  <div class="mp-field" id="mpRestInWrap">
+    <label>Rest Start</label>
+    <input type="time" id="mpRestIn" />
+  </div>
+
+  <div class="mp-field" id="mpRestOutWrap">
+    <label>Rest End</label>
+    <input type="time" id="mpRestOut" />
+  </div>
+</div>
+
+      <div class="mp-hint" id="mpHint">
+        Tip: lunch/rest must be entered as start + end. If you didn’t take lunch/rest, leave both blank.
+      </div>
+
+      <div class="mp-actions">
+        <button type="button" class="black btn-sm" onclick="closeMissedPunchModal()">Cancel</button>
+        <button type="submit" class="purple btn-sm" id="mpSubmitBtn">Submit</button>
+      </div>
+    </form>
   </div>
 </div>
 

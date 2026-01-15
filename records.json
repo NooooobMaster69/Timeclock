@@ -1448,5 +1448,105 @@
     "employee": "lqs005",
     "type": "CLOCK_OUT",
     "timestamp": "2026-01-13T23:47:52.517Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "CLOCK_IN",
+    "timestamp": "2026-01-14T21:47:42.731Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "CLOCK_OUT",
+    "timestamp": "2026-01-14T21:47:43.626Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "CLOCK_IN",
+    "timestamp": "2026-01-14T21:47:50.587Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "CLOCK_OUT",
+    "timestamp": "2026-01-14T22:45:32.953Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "CLOCK_IN",
+    "timestamp": "2026-01-13T17:00:00.000Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "CLOCK_IN",
+    "timestamp": "2026-01-12T18:00:00.000Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "CLOCK_IN",
+    "timestamp": "2026-01-15T00:42:52.804Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "MEAL_IN",
+    "timestamp": "2026-01-15T00:42:54.316Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "MEAL_OUT",
+    "timestamp": "2026-01-15T00:42:55.090Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "REST_IN",
+    "timestamp": "2026-01-15T00:42:55.493Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "REST_OUT",
+    "timestamp": "2026-01-15T00:42:56.107Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "MEAL_IN",
+    "timestamp": "2026-01-15T00:43:22.508Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "MEAL_OUT",
+    "timestamp": "2026-01-15T00:43:24.396Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "REST_IN",
+    "timestamp": "2026-01-15T00:43:25.292Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "REST_OUT",
+    "timestamp": "2026-01-15T00:43:34.144Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "MEAL_IN",
+    "timestamp": "2026-01-15T00:45:42.604Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "MEAL_OUT",
+    "timestamp": "2026-01-15T00:51:20.171Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "CLOCK_OUT",
+    "timestamp": "2026-01-15T00:51:22.498Z"
+  },
+  {
+    "employee": "Test1",
+    "type": "CLOCK_IN",
+    "timestamp": "2026-01-15T00:58:26.289Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "CLOCK_IN",
+    "timestamp": "2026-01-15T06:20:12.708Z"
   }
 ]

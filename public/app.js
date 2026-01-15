@@ -5,6 +5,7 @@
 
 // ---------- 小工具 ----------
 const $ = (sel) => document.querySelector(sel);
+let _missedPresetMap = new Map(); // date -> preset
 
 async function api(path, { method = "GET", json, headers } = {}) {
   const opts = { method, headers: headers || {} };
@@ -23,6 +24,9 @@ async function api(path, { method = "GET", json, headers } = {}) {
 }
 
 let _toastTimer = null;
+let _userRole = "";
+let _userGroup = "";
+let _empNameMap = new Map(); // employeeId -> displayName
 
 function toast(msg) {
   const el = document.getElementById("toast");
@@ -66,7 +70,11 @@ async function handleLogin() {
 
 function bindLoginPage() {
   const btn = $("#loginBtn") || document.querySelector('button[onclick="login()"]');
-  if (btn) btn.addEventListener("click", handleLogin);
+
+  if (btn) {
+    btn.removeAttribute("onclick"); // 防止 inline onclick + addEventListener 双触发
+    btn.addEventListener("click", handleLogin);
+  }
 
   ["#username", "#password"].forEach((sel) => {
     const el = $(sel);
@@ -75,9 +83,10 @@ function bindLoginPage() {
     });
   });
 
-  // 兼容 inline onclick="login()"
+  // 兼容：如果页面上还有旧 inline 调用
   window.login = handleLogin;
 }
+
 
 // ---------- 注册页逻辑 ----------
 async function register() {
@@ -112,7 +121,11 @@ async function register() {
 
 function bindRegisterPage() {
   const btn = $("#registerBtn") || document.querySelector('button[onclick="register()"]');
-  if (btn) btn.addEventListener("click", register);
+
+  if (btn) {
+    btn.removeAttribute("onclick"); // 防止双触发
+    btn.addEventListener("click", register);
+  }
 
   ["#username", "#name", "#password", "#group"].forEach((sel) => {
     const el = $(sel);
@@ -121,9 +134,9 @@ function bindRegisterPage() {
     });
   });
 
-  // 兼容 inline onclick="register()"
   window.register = register;
 }
+
 
 // 顶部欢迎栏的小时钟
 function startHelloClock() {
@@ -223,11 +236,11 @@ async function ensureLoggedIn() {
   catch { window.location.href = "login.html"; return false; }
 }
 
+
 async function setupAdminZone(role) {
   const adminZone = document.getElementById("adminZone");
   if (!adminZone) return;
 
-  // 非管理员：隐藏整个 Admin 区域
   if (role !== "admin") {
     adminZone.style.display = "none";
     return;
@@ -236,30 +249,446 @@ async function setupAdminZone(role) {
   adminZone.style.display = "block";
 
   const select = document.getElementById("adminEmployeeSelect");
-  if (!select || select.dataset.loaded === "1") return;
+  if (!select) return;
+
+  // 已加载过员工列表：只刷新 pending
+  // ✅ 永远确保绑定 change（防止某些情况下没绑上）
+if (!select.dataset.mpBound) {
+  select.addEventListener("change", async () => {
+    try {
+      await loadAdminPendingMissedPunch();
+    } catch (e) {
+      console.error(e);
+      toast("Failed to refresh pending list: " + (e?.message || e));
+    }
+  });
+  select.dataset.mpBound = "1";
+}
+
+
+// 已加载过员工列表：只刷新 pending
+if (select.dataset.loaded === "1") {
+  await loadAdminPendingMissedPunch();
+  return;
+}
+
 
   try {
     const list = await api("/api/employees");
+    _empNameMap = new Map(list.map(e => [e.employee, e.displayName || e.name || e.employee]));
+
     // 保留第一个 "All employees"
-    while (select.options.length > 1) {
-      select.remove(1);
-    }
+    while (select.options.length > 1) select.remove(1);
+
     list.forEach((emp) => {
       const opt = document.createElement("option");
       opt.value = emp.employee;
       opt.textContent = emp.displayName || emp.employee;
       select.appendChild(opt);
     });
+
     select.dataset.loaded = "1";
+
+    // 绑定一次 change -> 刷新 pending
+    if (!select.dataset.mpBound) {
+      select.addEventListener("change", () => loadAdminPendingMissedPunch());
+      select.dataset.mpBound = "1";
+    }
+
   } catch (err) {
     console.error("Failed to load employees", err);
   }
+
+  await loadAdminPendingMissedPunch();
 }
+
+// ===============================
+// Missed Punch (Employee UI)
+// ===============================
+function toYMD(dateObj) {
+  const y = dateObj.getFullYear();
+  const m = String(dateObj.getMonth() + 1).padStart(2, "0");
+  const d = String(dateObj.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+function hm(dateObj) {
+  const h = String(dateObj.getHours()).padStart(2, "0");
+  const m = String(dateObj.getMinutes()).padStart(2, "0");
+  return `${h}:${m}`;
+}
+
+// 检测：在 pay period 内，哪一天有 “未配对”的事件
+function detectMissedDays(records, periodStart, periodEnd, isTherapist) {
+  const startMs = periodStart.getTime();
+  const endMs = periodEnd.getTime() + 24 * 3600 * 1000 - 1;
+
+  const rec = (records || [])
+    .map(r => ({ ...r, t: new Date(r.timestamp).getTime(), dt: new Date(r.timestamp) }))
+    .filter(r => Number.isFinite(r.t) && r.t >= startMs && r.t <= endMs)
+    .sort((a, b) => a.t - b.t);
+
+  // 每天一个状态
+  const dayMap = new Map(); // ymd -> { openClockIn, openMealIn, openRestIn, issues:Set, sampleTimes:{} }
+
+  function ensureDay(ymd) {
+    if (!dayMap.has(ymd)) {
+      dayMap.set(ymd, {
+        openClockIn: null,
+        openMealIn: null,
+        openRestIn: null,
+        issues: new Set(),
+        sampleTimes: {} // 用于预填 modal
+      });
+    }
+    return dayMap.get(ymd);
+  }
+
+  for (const r of rec) {
+    const ymd = toYMD(r.dt);
+    const st = ensureDay(ymd);
+
+    if (r.type === "CLOCK_IN") {
+      if (st.openClockIn != null) {
+        st.issues.add("Duplicate CLOCK_IN (missing CLOCK_OUT)");
+      }
+      st.openClockIn = r.dt;
+      st.sampleTimes.clockIn = hm(r.dt);
+    }
+
+    if (r.type === "CLOCK_OUT") {
+      if (st.openClockIn == null) {
+        st.issues.add("CLOCK_OUT without CLOCK_IN");
+      } else {
+        st.sampleTimes.clockOut = hm(r.dt);
+        st.openClockIn = null;
+      }
+    }
+
+    if (r.type === "MEAL_IN") {
+      st.openMealIn = r.dt;
+      st.sampleTimes.mealIn = hm(r.dt);
+    }
+
+    if (r.type === "MEAL_OUT") {
+      if (st.openMealIn == null) st.issues.add("Lunch end without lunch start");
+      else {
+        st.sampleTimes.mealOut = hm(r.dt);
+        st.openMealIn = null;
+      }
+    }
+
+    if (!isTherapist) {
+      if (r.type === "REST_IN") {
+        st.openRestIn = r.dt;
+        st.sampleTimes.restIn = hm(r.dt);
+      }
+
+      if (r.type === "REST_OUT") {
+        if (st.openRestIn == null) st.issues.add("Rest end without rest start");
+        else {
+          st.sampleTimes.restOut = hm(r.dt);
+          st.openRestIn = null;
+        }
+      }
+    }
+  }
+
+  // 扫尾：只对“今天之前”的日期判 Missing end（今天的 open 视为 in-progress）
+const missed = [];
+const todayYMD = toYMD(new Date());
+
+for (const [ymd, st] of dayMap.entries()) {
+  const isPastDay = ymd < todayYMD;
+
+  // ✅ 只有过去日期，才把 open 视为 Missing end
+  if (isPastDay) {
+    if (st.openClockIn != null) st.issues.add("Missing CLOCK_OUT");
+    if (st.openMealIn != null) st.issues.add("Missing lunch end");
+    if (!isTherapist && st.openRestIn != null) st.issues.add("Missing rest end");
+  }
+
+  // ✅ 仍然允许今天显示“真实错误”（比如 CLOCK_OUT 没 CLOCK_IN、Duplicate CLOCK_IN）
+  if (st.issues.size) {
+    missed.push({
+      date: ymd,
+      issues: Array.from(st.issues),
+      preset: st.sampleTimes
+    });
+  }
+}
+
+
+  // 排序（日期升序）
+  missed.sort((a, b) => a.date.localeCompare(b.date));
+  return missed;
+}
+
+async function refreshMyMissedPunchUI() {
+  // 只对员工显示
+  if (_userRole === "admin") return;
+
+  const card = document.getElementById("missedPunchCard");
+  const items = document.getElementById("missedPunchItems");
+  const btn = document.getElementById("mpOpenBtn");
+  if (!card || !items || !btn) return;
+
+  // therapist：rest 在 UI 已隐藏，但 missed 检测里也要忽略 rest
+  const isTherapist = _userGroup === "therapist";
+
+  // 取 pay period
+  const { periodStart, periodEnd } = getPayPeriodRange(new Date());
+
+  // 拉 records
+  let records = [];
+  try {
+    records = await api("/api/records");
+  } catch (e) {
+    card.style.display = "none";
+    return;
+  }
+
+  const missedDays = detectMissedDays(records, periodStart, periodEnd, isTherapist);
+
+  if (!missedDays.length) {
+    card.style.display = "none";
+    return;
+  }
+
+  // 显示卡片
+  card.style.display = "block";
+
+  // 默认打开 modal 的日期：第一条缺卡日期
+  btn.onclick = () => openMissedPunchModal(missedDays[0]?.date, missedDays[0]?.preset);
+_missedPresetMap = new Map(missedDays.map(d => [d.date, d.preset || {}]));
+
+  items.innerHTML = missedDays.map(d => {
+    const issueText = d.issues.join(" / ");
+    return `
+      <div class="missed-item">
+        <div class="missed-item-left">
+          <div class="missed-date">${esc(d.date)}</div>
+          <div class="missed-detail">${esc(issueText)}</div>
+        </div>
+        <button class="purple btn-sm" type="button"
+  onclick="openMissedPunchModal('${d.date}')">Fix</button>
+
+      </div>
+    `;
+  }).join("");
+}
+
+function openMissedPunchModal(dateStr) {
+  const overlay = document.getElementById("mpOverlay");
+  if (!overlay) return;
+
+  overlay.classList.add("show");
+
+  const dateEl = document.getElementById("mpDate");
+  if (dateEl && dateStr) dateEl.value = dateStr;
+
+  const preset = (dateStr && _missedPresetMap.get(dateStr)) || {};
+
+  const setVal = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.value = val || "";
+  };
+
+  // ✅ 如果有记录就预填，没有就空
+  setVal("mpClockIn",  preset.clockIn);
+  setVal("mpClockOut", preset.clockOut);
+  setVal("mpMealIn",   preset.mealIn);
+  setVal("mpMealOut",  preset.mealOut);
+
+  // therapist 不用 rest
+  if (_userGroup === "therapist") {
+    setVal("mpRestIn", "");
+    setVal("mpRestOut", "");
+  } else {
+    setVal("mpRestIn",  preset.restIn);
+    setVal("mpRestOut", preset.restOut);
+  }
+
+  const err = document.getElementById("mpErrorBox");
+  if (err) { err.style.display = "none"; err.textContent = ""; }
+}
+
+function closeMissedPunchModal(){
+  const overlay = document.getElementById("mpOverlay");
+  if (overlay) overlay.classList.remove("show");
+}
+
+
+async function submitMissedPunch(e) {
+  e.preventDefault();
+
+  const errBox = document.getElementById("mpErrorBox");
+  const showErr = (m) => {
+    if (!errBox) return toast(m);
+    errBox.textContent = m;
+    errBox.style.display = "block";
+  };
+
+  const v = (id) => document.getElementById(id)?.value?.trim() || "";
+
+  const payload = {
+    date: v("mpDate"),
+    note: v("mpNote"),
+    clockIn: v("mpClockIn"),
+    clockOut: v("mpClockOut"),
+    mealIn: v("mpMealIn"),
+    mealOut: v("mpMealOut"),
+    restIn: v("mpRestIn"),
+    restOut: v("mpRestOut"),
+  };
+
+  if (!payload.date || !payload.clockIn || !payload.clockOut) {
+    return showErr("Date / Clock In / Clock Out are required.");
+  }
+
+  // lunch/rest 必须成对
+  const lunchOne = (!!payload.mealIn) ^ (!!payload.mealOut);
+  if (lunchOne) return showErr("Lunch must be entered as start + end (both or blank).");
+
+  const isTherapist = _userGroup === "therapist";
+  if (isTherapist) {
+    payload.restIn = "";
+    payload.restOut = "";
+  } else {
+    const restOne = (!!payload.restIn) ^ (!!payload.restOut);
+    if (restOne) return showErr("Rest must be entered as start + end (both or blank).");
+  }
+
+  try {
+    // ✅ 这里是你后端需要支持的创建接口
+    await api("/api/missed_punch", { method: "POST", json: payload });
+    toast("✅ Missed Punch Request submitted.");
+    closeMissedPunchModal();
+
+    // 刷新一次 UI（如果你希望提交后仍显示 pending 也可以）
+    await refreshMyMissedPunchUI();
+
+  } catch (err) {
+    showErr("Submit failed: " + (err.message || "Unknown error"));
+  }
+}
+
+// 暴露给 HTML inline onclick
+window.openMissedPunchModal = openMissedPunchModal;
+window.closeMissedPunchModal = closeMissedPunchModal;
+window.submitMissedPunch = submitMissedPunch;
+
+
+function esc(s) {
+  return String(s ?? "").replace(/[&<>"']/g, (c) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;",
+    '"': "&quot;", "'": "&#39;"
+  }[c]));
+}
+
+async function loadAdminPendingMissedPunch() {
+  const panel = document.getElementById("adminMissedPunchPanel");
+  const listEl = document.getElementById("adminMissedPunchList");
+  if (!panel || !listEl) return;
+
+  // admin 才显示
+  if (_userRole !== "admin") {
+    panel.style.display = "none";
+    return;
+  }
+  panel.style.display = "block";
+
+  const sel = document.getElementById("adminEmployeeSelect");
+  const emp = sel?.value || ""; // employeeId
+  const empName = emp ? (_empNameMap.get(emp) || emp) : "All employees";
+
+  // ✅ 先给一个“正在刷新”的视觉反馈
+  listEl.innerHTML = `<div style="color:#64748b;">Loading pending requests for <b>${esc(empName)}</b>...</div>`;
+
+  // ✅ 用 URLSearchParams + cache bust，避免缓存/代理导致看起来不刷新
+  const params = new URLSearchParams();
+  params.set("status", "pending");
+  params.set("range", "current");
+  if (emp) params.set("employee", emp);
+  params.set("_ts", String(Date.now())); // cache bust
+
+  const url = `/api/missed_punch?${params.toString()}`;
+
+  let data = [];
+  try {
+    data = await api(url);
+  } catch (e) {
+    listEl.innerHTML = `<div style="color:#991b1b;">Failed to load pending requests for <b>${esc(empName)}</b>: ${esc(e.message)}</div>`;
+    return;
+  }
+
+  if (!Array.isArray(data) || !data.length) {
+    listEl.innerHTML = `<div style="color:#64748b;">No pending requests for <b>${esc(empName)}</b>.</div>`;
+    return;
+  }
+
+  listEl.innerHTML = data.map(mp => {
+    const name = _empNameMap.get(mp.employee) || mp.employee;
+    const safeId = encodeURIComponent(mp.id);
+
+    const mealLine = (mp.mealIn && mp.mealOut) ? `Lunch: ${esc(mp.mealIn)}–${esc(mp.mealOut)}` : `Lunch: —`;
+    const restLine = (mp.restIn && mp.restOut) ? `Rest: ${esc(mp.restIn)}–${esc(mp.restOut)}` : `Rest: —`;
+    const noteLine = mp.note ? `Note: ${esc(mp.note)}` : "";
+
+    return `
+      <div style="border:1px solid #e2e8f0; border-radius:14px; padding:12px; background:#fff;">
+        <div style="display:flex; justify-content:space-between; gap:10px; align-items:flex-start;">
+          <div>
+            <div style="font-weight:800; color:#0f172a;">
+              ${esc(name)} <span style="color:#64748b; font-weight:600;">(${esc(mp.employee)})</span>
+            </div>
+            <div style="margin-top:2px; color:#334155; font-size:13px;">
+              <b>${esc(mp.date)}</b> · In ${esc(mp.clockIn)} — Out ${esc(mp.clockOut)}
+            </div>
+            <div style="margin-top:6px; color:#475569; font-size:12px; line-height:1.35;">
+              ${mealLine}<br/>
+              ${restLine}
+              ${noteLine ? `<br/>${noteLine}` : ``}
+            </div>
+          </div>
+
+          <div style="display:flex; flex-direction:column; gap:8px; min-width:140px;">
+            <button class="green btn-sm" type="button"
+              onclick="adminReviewMissedPunch('${safeId}','approve')">Approve</button>
+            <button class="red btn-sm" type="button"
+              onclick="adminReviewMissedPunch('${safeId}','deny')">Deny</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+
+async function adminReviewMissedPunch(id, action) {
+  id = decodeURIComponent(id); // ✅ 还原
+  const note = prompt("Decision note (optional):") || "";
+
+  try {
+    await api(`/api/missed_punch/${encodeURIComponent(id)}/review`, {
+      method: "POST",
+      json: { action, note }
+    });
+    toast(`✅ Updated: ${action}`);
+    await loadAdminPendingMissedPunch();
+  } catch (e) {
+    toast("❌ Review failed: " + (e.message || "Unknown error"));
+  }
+}
+
+
 
 
 async function loadStateAndButtons() {
   try {
     const s = await api("/api/state");
+    _userRole = s.role;
+_userGroup = s.group;
     const isAdmin = s.role === "admin";
     const isTherapist = s.group === "therapist";
 
@@ -391,7 +820,9 @@ async function loadStateAndButtons() {
         btnRestOut.disabled = !s.inRest;
       }
     }
-
+if (_userRole !== "admin") {
+  await refreshMyMissedPunchUI();
+}
   } catch (err) {
     // 如果 session 过期，回登录页
     window.location.href = "login.html";
@@ -560,6 +991,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   window.exportMyCurrent = exportCurrentMine;
   window.exportMyAll = exportAllMine;
   window.exportMyCustom = exportMyCustom;
+window.adminReviewMissedPunch = adminReviewMissedPunch;
 
   // 兼容之前的 inline 调用
   window.exportCSV = exportCurrentMine;
