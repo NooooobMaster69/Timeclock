@@ -1,32 +1,1330 @@
 [
   {
+    "employee": "123456",
+    "type": "CLOCK_IN",
+    "timestamp": "2025-10-30T19:52:26.329Z"
+  },
+  {
+    "employee": "981213",
+    "type": "CLOCK_IN",
+    "timestamp": "2025-10-30T19:52:42.278Z"
+  },
+  {
+    "employee": "121398",
+    "type": "CLOCK_IN",
+    "timestamp": "2025-11-03T21:02:43.268Z"
+  },
+  {
+    "employee": "121398",
+    "type": "CLOCK_OUT",
+    "timestamp": "2025-11-03T21:11:43.944Z"
+  },
+  {
+    "employee": "121398",
+    "type": "MEAL_IN",
+    "timestamp": "2025-11-03T21:11:48.611Z"
+  },
+  {
+    "employee": "121398",
+    "type": "MEAL_OUT",
+    "timestamp": "2025-11-03T21:11:51.478Z"
+  },
+  {
+    "employee": "121398",
+    "type": "CLOCK_IN",
+    "timestamp": "2025-11-03T21:11:59.477Z"
+  },
+  {
+    "employee": "123456",
+    "type": "CLOCK_OUT",
+    "timestamp": "2025-11-03T21:43:20.171Z"
+  },
+  {
+    "employee": "121398",
+    "type": "CLOCK_OUT",
+    "timestamp": "2025-11-03T21:43:47.422Z"
+  },
+  {
+    "employee": "121398",
+    "type": "CLOCK_IN",
+    "timestamp": "2025-11-03T21:58:34.447Z"
+  },
+  {
+    "employee": "121398",
+    "type": "CLOCK_OUT",
+    "timestamp": "2025-11-03T21:59:14.379Z"
+  },
+  {
+    "employee": "121398",
+    "type": "CLOCK_IN",
+    "timestamp": "2025-11-03T22:00:30.167Z"
+  },
+  {
+    "employee": "121398",
+    "type": "MEAL_IN",
+    "timestamp": "2025-11-03T22:00:37.595Z"
+  },
+  {
+    "employee": "121398",
+    "type": "MEAL_OUT",
+    "timestamp": "2025-11-03T23:01:43.090Z"
+  },
+  {
+    "employee": "121398",
+    "type": "CLOCK_IN",
+    "timestamp": "2025-11-03T23:09:05.665Z"
+  },
+  {
+    "employee": "121398",
+    "type": "CLOCK_OUT",
+    "timestamp": "2025-11-03T23:09:08.330Z"
+  },
+  {
+    "employee": "121398",
+    "type": "CLOCK_IN",
+    "timestamp": "2025-11-03T23:09:21.863Z"
+  },
+  {
+    "employee": "121398",
+    "type": "MEAL_IN",
+    "timestamp": "2025-11-03T23:09:24.246Z"
+  },
+  {
+    "employee": "121398",
+    "type": "MEAL_OUT",
+    "timestamp": "2025-11-03T23:09:29.697Z"
+  },
+  {
+    "employee": "121398",
+    "type": "CLOCK_IN",
+    "timestamp": "2025-11-03T23:16:57.235Z"
+  },
+  {
+    "employee": "121398",
+    "type": "MEAL_IN",
+    "timestamp": "2025-11-03T23:17:00.136Z"
+  },
+  {
+    "employee": "121398",
+    "type": "MEAL_OUT",
+    "timestamp": "2025-11-03T23:17:00.885Z"
+  },
+  {
+    "employee": "121398",
+    "type": "CLOCK_OUT",
+    "timestamp": "2025-11-03T23:17:02.068Z"
+  },
+  {
+    "employee": "121398",
+    "type": "CLOCK_IN",
+    "timestamp": "2025-11-03T23:17:04.169Z"
+  },
+  {
+    "employee": "121398",
+    "type": "REST_IN",
+    "timestamp": "2025-11-03T23:17:07.087Z"
+  },
+  {
+    "employee": "121398",
+    "type": "REST_OUT",
+    "timestamp": "2025-11-03T23:17:12.918Z"
+  },
+  {
+    "employee": "121398",
+    "type": "CLOCK_OUT",
+    "timestamp": "2025-11-03T23:26:51.181Z"
+  },
+  {
+    "employee": "121398",
+    "type": "CLOCK_IN",
+    "timestamp": "2025-11-03T23:27:09.765Z"
+  },
+  {
+    "employee": "121398",
+    "type": "CLOCK_OUT",
+    "timestamp": "2025-11-03T23:27:35.214Z"
+  },
+  {
+    "employee": "121398",
+    "type": "CLOCK_IN",
+    "timestamp": "2025-11-03T23:27:36.698Z"
+  },
+  {
+    "employee": "121398",
+    "type": "MEAL_IN",
+    "timestamp": "2025-11-03T23:27:37.348Z"
+  },
+  {
+    "employee": "121398",
+    "type": "MEAL_OUT",
+    "timestamp": "2025-11-03T23:27:38.648Z"
+  },
+  {
+    "employee": "121398",
+    "type": "REST_IN",
+    "timestamp": "2025-11-03T23:27:39.531Z"
+  },
+  {
+    "employee": "121398",
+    "type": "REST_OUT",
+    "timestamp": "2025-11-03T23:27:40.264Z"
+  },
+  {
+    "employee": "121398",
+    "type": "CLOCK_OUT",
+    "timestamp": "2025-11-03T23:27:42.031Z"
+  },
+  {
+    "employee": "53669",
+    "type": "CLOCK_IN",
+    "timestamp": "2025-11-03T23:36:38.636Z"
+  },
+  {
+    "employee": "53669",
+    "type": "MEAL_IN",
+    "timestamp": "2025-11-03T23:37:04.191Z"
+  },
+  {
+    "employee": "53669",
+    "type": "MEAL_OUT",
+    "timestamp": "2025-11-03T23:37:09.536Z"
+  },
+  {
+    "employee": "53669",
+    "type": "REST_IN",
+    "timestamp": "2025-11-03T23:37:10.170Z"
+  },
+  {
+    "employee": "53669",
+    "type": "REST_OUT",
+    "timestamp": "2025-11-03T23:37:11.187Z"
+  },
+  {
+    "employee": "53669",
+    "type": "CLOCK_OUT",
+    "timestamp": "2025-11-03T23:37:18.787Z"
+  },
+  {
+    "employee": "Qiushi",
+    "type": "CLOCK_IN",
+    "timestamp": "2025-11-04T04:13:51.936Z"
+  },
+  {
+    "employee": "Qiushi",
+    "type": "MEAL_IN",
+    "timestamp": "2025-11-04T04:14:07.935Z"
+  },
+  {
+    "employee": "Qiushi",
+    "type": "MEAL_OUT",
+    "timestamp": "2025-11-04T04:14:11.567Z"
+  },
+  {
+    "employee": "Qiushi",
+    "type": "REST_IN",
+    "timestamp": "2025-11-04T04:14:13.216Z"
+  },
+  {
+    "employee": "Qiushi",
+    "type": "REST_OUT",
+    "timestamp": "2025-11-04T04:14:15.067Z"
+  },
+  {
+    "employee": "Qiushi",
+    "type": "CLOCK_OUT",
+    "timestamp": "2025-11-04T04:14:19.466Z"
+  },
+  {
+    "employee": "981213",
+    "type": "CLOCK_OUT",
+    "timestamp": "2025-11-05T18:15:02.226Z"
+  },
+  {
+    "employee": "121398",
+    "type": "CLOCK_IN",
+    "timestamp": "2025-11-05T18:15:15.825Z"
+  },
+  {
+    "employee": "121398",
+    "type": "CLOCK_OUT",
+    "timestamp": "2025-11-05T18:15:19.758Z"
+  },
+  {
+    "employee": "981213",
+    "type": "CLOCK_IN",
+    "timestamp": "2025-11-05T18:15:23.525Z"
+  },
+  {
+    "employee": "981213",
+    "type": "CLOCK_OUT",
+    "timestamp": "2025-11-05T18:23:15.538Z"
+  },
+  {
+    "employee": "981213",
+    "type": "CLOCK_IN",
+    "timestamp": "2025-11-05T18:23:21.830Z"
+  },
+  {
+    "employee": "121398",
+    "type": "CLOCK_IN",
+    "timestamp": "2025-11-05T19:41:35.638Z"
+  },
+  {
+    "employee": "121398",
+    "type": "CLOCK_OUT",
+    "timestamp": "2025-11-05T19:41:45.106Z"
+  },
+  {
+    "employee": "121398",
+    "type": "CLOCK_IN",
+    "timestamp": "2025-11-05T19:41:48.689Z"
+  },
+  {
+    "employee": "121398",
+    "type": "MEAL_IN",
+    "timestamp": "2025-11-05T19:41:51.572Z"
+  },
+  {
+    "employee": "121398",
+    "type": "MEAL_OUT",
+    "timestamp": "2025-11-05T19:41:56.456Z"
+  },
+  {
+    "employee": "121398",
+    "type": "REST_IN",
+    "timestamp": "2025-11-05T19:41:58.089Z"
+  },
+  {
+    "employee": "121398",
+    "type": "REST_OUT",
+    "timestamp": "2025-11-05T19:42:02.922Z"
+  },
+  {
+    "employee": "121398",
+    "type": "CLOCK_OUT",
+    "timestamp": "2025-11-05T19:42:09.639Z"
+  },
+  {
+    "employee": "121398",
+    "type": "CLOCK_IN",
+    "timestamp": "2025-11-05T19:42:13.139Z"
+  },
+  {
+    "employee": "121398",
+    "type": "MEAL_IN",
+    "timestamp": "2025-11-05T19:42:14.556Z"
+  },
+  {
+    "employee": "121398",
+    "type": "MEAL_OUT",
+    "timestamp": "2025-11-05T19:42:16.540Z"
+  },
+  {
+    "employee": "121398",
+    "type": "CLOCK_OUT",
+    "timestamp": "2025-11-05T19:42:18.990Z"
+  },
+  {
+    "employee": "121398",
+    "type": "CLOCK_IN",
+    "timestamp": "2025-11-05T20:22:38.594Z"
+  },
+  {
+    "employee": "121398",
+    "type": "CLOCK_OUT",
+    "timestamp": "2025-11-05T20:22:40.326Z"
+  },
+  {
     "employee": "lqs005",
     "type": "CLOCK_IN",
-    "timestamp": "2026-01-20T18:17:17.944Z"
-  },
-  {
-    "employee": "lqs005",
-    "type": "MEAL_IN",
-    "timestamp": "2026-01-20T18:17:19.820Z"
-  },
-  {
-    "employee": "lqs005",
-    "type": "MEAL_OUT",
-    "timestamp": "2026-01-20T18:17:21.018Z"
-  },
-  {
-    "employee": "lqs005",
-    "type": "REST_IN",
-    "timestamp": "2026-01-20T18:17:22.185Z"
-  },
-  {
-    "employee": "lqs005",
-    "type": "REST_OUT",
-    "timestamp": "2026-01-20T18:17:22.686Z"
+    "timestamp": "2025-11-06T18:18:55.818Z"
   },
   {
     "employee": "lqs005",
     "type": "CLOCK_OUT",
-    "timestamp": "2026-01-20T18:17:23.468Z"
+    "timestamp": "2025-11-06T18:18:57.083Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "CLOCK_IN",
+    "timestamp": "2025-11-06T18:33:01.365Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "CLOCK_OUT",
+    "timestamp": "2025-11-06T18:33:03.011Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "CLOCK_IN",
+    "timestamp": "2025-11-06T18:33:13.812Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "MEAL_IN",
+    "timestamp": "2025-11-06T18:33:14.930Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "MEAL_OUT",
+    "timestamp": "2025-11-06T18:33:15.311Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "REST_IN",
+    "timestamp": "2025-11-06T18:33:16.328Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "REST_OUT",
+    "timestamp": "2025-11-06T18:33:20.395Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "CLOCK_OUT",
+    "timestamp": "2025-11-06T18:33:21.211Z"
+  },
+  {
+    "employee": "User test 2",
+    "type": "CLOCK_IN",
+    "timestamp": "2025-11-06T18:46:57.492Z"
+  },
+  {
+    "employee": "User test 2",
+    "type": "MEAL_IN",
+    "timestamp": "2025-11-06T18:47:02.138Z"
+  },
+  {
+    "employee": "User test 2",
+    "type": "MEAL_OUT",
+    "timestamp": "2025-11-06T18:47:03.355Z"
+  },
+  {
+    "employee": "User test 2",
+    "type": "CLOCK_OUT",
+    "timestamp": "2025-11-06T18:47:05.188Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "CLOCK_IN",
+    "timestamp": "2025-11-06T18:57:15.896Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "CLOCK_OUT",
+    "timestamp": "2025-11-06T18:57:18.575Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "CLOCK_IN",
+    "timestamp": "2025-11-06T18:57:20.292Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "MEAL_IN",
+    "timestamp": "2025-11-06T18:57:21.225Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "MEAL_OUT",
+    "timestamp": "2025-11-06T18:57:22.442Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "REST_IN",
+    "timestamp": "2025-11-06T18:57:25.292Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "REST_OUT",
+    "timestamp": "2025-11-06T18:57:26.058Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "CLOCK_OUT",
+    "timestamp": "2025-11-06T18:57:26.708Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "CLOCK_IN",
+    "timestamp": "2025-11-06T19:02:14.629Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "CLOCK_OUT",
+    "timestamp": "2025-11-06T19:09:53.299Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "CLOCK_IN",
+    "timestamp": "2025-11-06T19:11:36.747Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "CLOCK_OUT",
+    "timestamp": "2025-11-06T20:51:22.547Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "CLOCK_IN",
+    "timestamp": "2025-11-06T20:51:27.208Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "MEAL_IN",
+    "timestamp": "2025-11-06T20:51:28.347Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "MEAL_OUT",
+    "timestamp": "2025-11-06T20:51:29.882Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "CLOCK_OUT",
+    "timestamp": "2025-11-06T20:51:31.088Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "CLOCK_IN",
+    "timestamp": "2025-11-06T20:54:37.601Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "MEAL_IN",
+    "timestamp": "2025-11-06T20:54:39.966Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "MEAL_OUT",
+    "timestamp": "2025-11-06T20:54:41.132Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "CLOCK_OUT",
+    "timestamp": "2025-11-06T20:54:43.416Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "CLOCK_IN",
+    "timestamp": "2025-11-12T18:10:43.702Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "CLOCK_OUT",
+    "timestamp": "2025-11-12T18:10:46.018Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "CLOCK_IN",
+    "timestamp": "2025-11-12T18:24:31.538Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "CLOCK_OUT",
+    "timestamp": "2025-11-12T18:47:26.183Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "CLOCK_IN",
+    "timestamp": "2025-11-12T18:47:27.980Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "CLOCK_OUT",
+    "timestamp": "2025-11-12T23:07:57.621Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "CLOCK_IN",
+    "timestamp": "2025-11-12T23:07:58.337Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "CLOCK_OUT",
+    "timestamp": "2025-11-12T23:08:05.720Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "CLOCK_IN",
+    "timestamp": "2025-11-12T23:08:07.021Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "CLOCK_OUT",
+    "timestamp": "2025-11-12T23:08:18.120Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "CLOCK_IN",
+    "timestamp": "2025-11-12T23:08:18.803Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "MEAL_IN",
+    "timestamp": "2025-11-12T23:09:51.837Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "MEAL_OUT",
+    "timestamp": "2025-11-12T23:09:53.088Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "CLOCK_OUT",
+    "timestamp": "2025-11-12T23:09:54.688Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "CLOCK_IN",
+    "timestamp": "2025-11-12T23:10:00.937Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "MEAL_IN",
+    "timestamp": "2025-11-12T23:10:02.654Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "MEAL_OUT",
+    "timestamp": "2025-11-12T23:10:03.837Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "CLOCK_OUT",
+    "timestamp": "2025-11-12T23:10:04.921Z"
+  },
+  {
+    "employee": "Yuno",
+    "type": "CLOCK_IN",
+    "timestamp": "2025-11-12T23:10:52.072Z"
+  },
+  {
+    "employee": "Yuno",
+    "type": "MEAL_IN",
+    "timestamp": "2025-11-12T23:10:55.221Z"
+  },
+  {
+    "employee": "Yuno",
+    "type": "MEAL_OUT",
+    "timestamp": "2025-11-12T23:10:57.204Z"
+  },
+  {
+    "employee": "Yuno",
+    "type": "CLOCK_OUT",
+    "timestamp": "2025-11-12T23:10:58.854Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "CLOCK_IN",
+    "timestamp": "2025-11-13T17:17:41.589Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "MEAL_IN",
+    "timestamp": "2025-11-13T18:37:17.978Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "MEAL_OUT",
+    "timestamp": "2025-11-13T18:37:22.215Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "MEAL_IN",
+    "timestamp": "2025-11-13T18:37:23.915Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "MEAL_OUT",
+    "timestamp": "2025-11-13T18:37:24.732Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "CLOCK_OUT",
+    "timestamp": "2025-11-13T21:44:01.482Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "CLOCK_IN",
+    "timestamp": "2025-11-13T21:44:03.378Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "CLOCK_OUT",
+    "timestamp": "2025-11-13T21:44:07.045Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "CLOCK_IN",
+    "timestamp": "2025-11-13T22:33:01.010Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "MEAL_IN",
+    "timestamp": "2025-11-13T22:33:02.885Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "MEAL_OUT",
+    "timestamp": "2025-11-13T22:33:04.035Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "CLOCK_OUT",
+    "timestamp": "2025-11-13T22:33:11.595Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "CLOCK_IN",
+    "timestamp": "2025-11-13T22:33:15.552Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "MEAL_IN",
+    "timestamp": "2025-11-13T23:30:29.726Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "MEAL_OUT",
+    "timestamp": "2025-11-13T23:30:30.703Z"
+  },
+  {
+    "employee": "Yuno",
+    "type": "CLOCK_IN",
+    "timestamp": "2025-11-13T23:40:54.083Z"
+  },
+  {
+    "employee": "Yuno",
+    "type": "CLOCK_OUT",
+    "timestamp": "2025-11-13T23:42:36.497Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "MEAL_IN",
+    "timestamp": "2025-11-13T23:45:35.276Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "MEAL_OUT",
+    "timestamp": "2025-11-13T23:45:38.107Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "CLOCK_OUT",
+    "timestamp": "2025-11-13T23:45:39.107Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "CLOCK_IN",
+    "timestamp": "2025-11-13T23:45:41.391Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "CLOCK_OUT",
+    "timestamp": "2025-11-13T23:45:42.839Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "CLOCK_IN",
+    "timestamp": "2025-11-13T23:45:45.541Z"
+  },
+  {
+    "employee": "Gargi",
+    "type": "CLOCK_IN",
+    "timestamp": "2025-11-14T02:05:37.019Z"
+  },
+  {
+    "employee": "Gargi",
+    "type": "MEAL_IN",
+    "timestamp": "2025-11-14T02:06:14.761Z"
+  },
+  {
+    "employee": "Gargi",
+    "type": "MEAL_OUT",
+    "timestamp": "2025-11-14T02:06:16.553Z"
+  },
+  {
+    "employee": "Gargi",
+    "type": "CLOCK_OUT",
+    "timestamp": "2025-11-14T02:06:22.044Z"
+  },
+  {
+    "employee": "Gargi",
+    "type": "CLOCK_IN",
+    "timestamp": "2025-11-14T02:07:56.085Z"
+  },
+  {
+    "employee": "Gargi",
+    "type": "MEAL_IN",
+    "timestamp": "2025-11-14T02:07:58.168Z"
+  },
+  {
+    "employee": "Gargi",
+    "type": "MEAL_OUT",
+    "timestamp": "2025-11-14T02:07:58.817Z"
+  },
+  {
+    "employee": "Gargi",
+    "type": "CLOCK_OUT",
+    "timestamp": "2025-11-14T02:08:01.954Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "CLOCK_OUT",
+    "timestamp": "2025-11-14T02:12:02.614Z"
+  },
+  {
+    "employee": "Iris",
+    "type": "CLOCK_IN",
+    "timestamp": "2025-11-14T02:31:25.314Z"
+  },
+  {
+    "employee": "Iris",
+    "type": "MEAL_IN",
+    "timestamp": "2025-11-14T02:31:30.162Z"
+  },
+  {
+    "employee": "Iris",
+    "type": "MEAL_OUT",
+    "timestamp": "2025-11-14T02:31:33.628Z"
+  },
+  {
+    "employee": "Iris",
+    "type": "MEAL_IN",
+    "timestamp": "2025-11-14T02:31:35.878Z"
+  },
+  {
+    "employee": "Iris",
+    "type": "MEAL_OUT",
+    "timestamp": "2025-11-14T02:31:37.561Z"
+  },
+  {
+    "employee": "Iris",
+    "type": "MEAL_IN",
+    "timestamp": "2025-11-14T02:31:38.478Z"
+  },
+  {
+    "employee": "Iris",
+    "type": "MEAL_OUT",
+    "timestamp": "2025-11-14T02:31:39.328Z"
+  },
+  {
+    "employee": "Iris",
+    "type": "CLOCK_OUT",
+    "timestamp": "2025-11-14T02:31:51.668Z"
+  },
+  {
+    "employee": "Iris",
+    "type": "CLOCK_IN",
+    "timestamp": "2025-11-14T02:32:22.815Z"
+  },
+  {
+    "employee": "Iris",
+    "type": "CLOCK_OUT",
+    "timestamp": "2025-11-14T02:32:30.212Z"
+  },
+  {
+    "employee": "Lu",
+    "type": "CLOCK_IN",
+    "timestamp": "2025-11-14T04:20:48.224Z"
+  },
+  {
+    "employee": "Lu",
+    "type": "MEAL_IN",
+    "timestamp": "2025-11-14T04:20:58.463Z"
+  },
+  {
+    "employee": "Lu",
+    "type": "MEAL_OUT",
+    "timestamp": "2025-11-14T04:21:00.444Z"
+  },
+  {
+    "employee": "Lu",
+    "type": "CLOCK_OUT",
+    "timestamp": "2025-11-14T04:21:02.738Z"
+  },
+  {
+    "employee": "Lu",
+    "type": "CLOCK_IN",
+    "timestamp": "2025-11-14T04:24:06.132Z"
+  },
+  {
+    "employee": "Lu",
+    "type": "CLOCK_OUT",
+    "timestamp": "2025-11-14T04:24:12.063Z"
+  },
+  {
+    "employee": "PT1",
+    "type": "CLOCK_IN",
+    "timestamp": "2025-11-17T22:32:11.855Z"
+  },
+  {
+    "employee": "PT1",
+    "type": "MEAL_IN",
+    "timestamp": "2025-11-17T22:32:14.961Z"
+  },
+  {
+    "employee": "PT1",
+    "type": "MEAL_OUT",
+    "timestamp": "2025-11-17T22:32:15.811Z"
+  },
+  {
+    "employee": "Aids Test 1",
+    "type": "CLOCK_IN",
+    "timestamp": "2025-11-17T22:32:31.377Z"
+  },
+  {
+    "employee": "Aids Test 1",
+    "type": "MEAL_IN",
+    "timestamp": "2025-11-17T22:32:32.061Z"
+  },
+  {
+    "employee": "Aids Test 1",
+    "type": "MEAL_OUT",
+    "timestamp": "2025-11-17T22:32:32.528Z"
+  },
+  {
+    "employee": "Aids Test 1",
+    "type": "CLOCK_OUT",
+    "timestamp": "2025-11-17T22:32:34.911Z"
+  },
+  {
+    "employee": "Aids Test 1",
+    "type": "CLOCK_IN",
+    "timestamp": "2025-11-17T22:32:35.477Z"
+  },
+  {
+    "employee": "Aids Test 1",
+    "type": "CLOCK_OUT",
+    "timestamp": "2025-11-17T22:32:37.913Z"
+  },
+  {
+    "employee": "Aids Test 1",
+    "type": "CLOCK_IN",
+    "timestamp": "2025-11-17T22:32:38.661Z"
+  },
+  {
+    "employee": "Aids Test 1",
+    "type": "MEAL_IN",
+    "timestamp": "2025-11-17T22:41:00.347Z"
+  },
+  {
+    "employee": "Aids Test 1",
+    "type": "MEAL_OUT",
+    "timestamp": "2025-11-17T22:41:01.629Z"
+  },
+  {
+    "employee": "Aids Test 1",
+    "type": "CLOCK_OUT",
+    "timestamp": "2025-11-17T22:41:03.696Z"
+  },
+  {
+    "employee": "Aids Test 1",
+    "type": "CLOCK_IN",
+    "timestamp": "2025-11-17T22:41:08.112Z"
+  },
+  {
+    "employee": "Aids Test 1",
+    "type": "CLOCK_OUT",
+    "timestamp": "2025-11-17T22:41:11.396Z"
+  },
+  {
+    "employee": "Aids Test 1",
+    "type": "CLOCK_IN",
+    "timestamp": "2025-11-17T22:41:14.562Z"
+  },
+  {
+    "employee": "Aids Test 1",
+    "type": "MEAL_IN",
+    "timestamp": "2025-11-17T22:41:15.029Z"
+  },
+  {
+    "employee": "Aids Test 1",
+    "type": "MEAL_OUT",
+    "timestamp": "2025-11-17T22:41:15.646Z"
+  },
+  {
+    "employee": "Aids Test 1",
+    "type": "CLOCK_OUT",
+    "timestamp": "2025-11-17T22:41:17.946Z"
+  },
+  {
+    "employee": "Aids Test 1",
+    "type": "CLOCK_IN",
+    "timestamp": "2025-11-17T22:41:51.031Z"
+  },
+  {
+    "employee": "PT1",
+    "type": "CLOCK_OUT",
+    "timestamp": "2025-11-17T22:42:38.230Z"
+  },
+  {
+    "employee": "PT1",
+    "type": "CLOCK_IN",
+    "timestamp": "2025-11-17T22:55:17.580Z"
+  },
+  {
+    "employee": "Test1",
+    "type": "CLOCK_IN",
+    "timestamp": "2025-11-18T03:13:04.121Z"
+  },
+  {
+    "employee": "Test1",
+    "type": "CLOCK_OUT",
+    "timestamp": "2025-11-18T03:13:07.320Z"
+  },
+  {
+    "employee": "Test1",
+    "type": "CLOCK_IN",
+    "timestamp": "2025-11-18T03:13:09.020Z"
+  },
+  {
+    "employee": "Test1",
+    "type": "MEAL_IN",
+    "timestamp": "2025-11-18T03:13:11.470Z"
+  },
+  {
+    "employee": "Test1",
+    "type": "MEAL_OUT",
+    "timestamp": "2025-11-18T03:13:12.753Z"
+  },
+  {
+    "employee": "Test",
+    "type": "CLOCK_IN",
+    "timestamp": "2025-11-18T03:16:28.127Z"
+  },
+  {
+    "employee": "Test",
+    "type": "MEAL_IN",
+    "timestamp": "2025-11-18T03:16:33.078Z"
+  },
+  {
+    "employee": "Test",
+    "type": "MEAL_OUT",
+    "timestamp": "2025-11-18T03:16:34.878Z"
+  },
+  {
+    "employee": "Yuming",
+    "type": "CLOCK_IN",
+    "timestamp": "2025-12-08T07:58:13.631Z"
+  },
+  {
+    "employee": "Yuming",
+    "type": "MEAL_IN",
+    "timestamp": "2025-12-08T07:58:48.790Z"
+  },
+  {
+    "employee": "Yuming",
+    "type": "MEAL_OUT",
+    "timestamp": "2025-12-08T07:58:50.307Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "CLOCK_IN",
+    "timestamp": "2025-12-08T08:09:59.202Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "MEAL_IN",
+    "timestamp": "2025-12-08T08:10:11.228Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "MEAL_OUT",
+    "timestamp": "2025-12-08T08:10:18.245Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "CLOCK_OUT",
+    "timestamp": "2025-12-08T08:10:24.995Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "CLOCK_IN",
+    "timestamp": "2025-12-08T08:37:37.523Z"
+  },
+  {
+    "employee": "Oudy",
+    "type": "CLOCK_IN",
+    "timestamp": "2025-12-23T14:04:30.256Z"
+  },
+  {
+    "employee": "Oudy",
+    "type": "MEAL_IN",
+    "timestamp": "2025-12-23T14:04:42.889Z"
+  },
+  {
+    "employee": "Oudy",
+    "type": "MEAL_OUT",
+    "timestamp": "2025-12-23T14:05:02.722Z"
+  },
+  {
+    "employee": "Oudy",
+    "type": "CLOCK_OUT",
+    "timestamp": "2025-12-23T14:05:25.056Z"
+  },
+  {
+    "employee": "Oudy",
+    "type": "CLOCK_IN",
+    "timestamp": "2025-12-23T14:05:43.539Z"
+  },
+  {
+    "employee": "Oudy",
+    "type": "MEAL_IN",
+    "timestamp": "2025-12-23T14:05:58.256Z"
+  },
+  {
+    "employee": "Oudy",
+    "type": "MEAL_OUT",
+    "timestamp": "2025-12-23T14:05:59.356Z"
+  },
+  {
+    "employee": "Oudy",
+    "type": "CLOCK_OUT",
+    "timestamp": "2025-12-23T14:06:02.156Z"
+  },
+  {
+    "employee": "Oudy",
+    "type": "CLOCK_IN",
+    "timestamp": "2025-12-23T14:16:02.791Z"
+  },
+  {
+    "employee": "Oudy",
+    "type": "MEAL_IN",
+    "timestamp": "2025-12-23T14:16:04.690Z"
+  },
+  {
+    "employee": "Oudy",
+    "type": "MEAL_OUT",
+    "timestamp": "2025-12-23T14:16:05.588Z"
+  },
+  {
+    "employee": "Oudy",
+    "type": "MEAL_IN",
+    "timestamp": "2025-12-23T14:16:29.253Z"
+  },
+  {
+    "employee": "Oudy",
+    "type": "MEAL_OUT",
+    "timestamp": "2025-12-23T14:16:29.849Z"
+  },
+  {
+    "employee": "Oudy",
+    "type": "CLOCK_OUT",
+    "timestamp": "2025-12-23T14:16:30.599Z"
+  },
+  {
+    "employee": "hello",
+    "type": "CLOCK_IN",
+    "timestamp": "2025-12-27T12:32:33.877Z"
+  },
+  {
+    "employee": "hello",
+    "type": "MEAL_IN",
+    "timestamp": "2025-12-27T12:32:41.887Z"
+  },
+  {
+    "employee": "hello",
+    "type": "MEAL_OUT",
+    "timestamp": "2025-12-27T12:32:45.370Z"
+  },
+  {
+    "employee": "hello",
+    "type": "CLOCK_OUT",
+    "timestamp": "2025-12-27T12:32:47.728Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "CLOCK_IN",
+    "timestamp": "2026-01-12T18:00:00.000Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "CLOCK_OUT",
+    "timestamp": "2026-01-13T04:03:27.886Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "CLOCK_IN",
+    "timestamp": "2026-01-13T04:03:29.652Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "MEAL_IN",
+    "timestamp": "2026-01-13T04:03:31.918Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "MEAL_OUT",
+    "timestamp": "2026-01-13T04:03:32.352Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "CLOCK_OUT",
+    "timestamp": "2026-01-13T04:03:33.035Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "CLOCK_IN",
+    "timestamp": "2026-01-13T16:00:00.000Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "MEAL_IN",
+    "timestamp": "2026-01-13T20:00:00.000Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "MEAL_OUT",
+    "timestamp": "2026-01-13T21:00:00.000Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "REST_IN",
+    "timestamp": "2026-01-13T22:40:00.000Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "REST_OUT",
+    "timestamp": "2026-01-13T22:50:00.000Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "CLOCK_OUT",
+    "timestamp": "2026-01-14T01:00:00.000Z"
+  },
+  {
+    "employee": "Test1",
+    "type": "CLOCK_IN",
+    "timestamp": "2026-01-14T16:58:00.000Z",
+    "source": "MISSED_PUNCH",
+    "requestId": "mkn015hb_zxmbam",
+    "createdAt": "2026-01-20T19:40:47.061Z"
+  },
+  {
+    "employee": "Test1",
+    "type": "REST_IN",
+    "timestamp": "2026-01-14T17:00:00.000Z",
+    "source": "MISSED_PUNCH",
+    "requestId": "mkn015hb_zxmbam",
+    "createdAt": "2026-01-20T19:40:47.061Z"
+  },
+  {
+    "employee": "Test1",
+    "type": "REST_OUT",
+    "timestamp": "2026-01-14T18:00:00.000Z",
+    "source": "MISSED_PUNCH",
+    "requestId": "mkn015hb_zxmbam",
+    "createdAt": "2026-01-20T19:40:47.061Z"
+  },
+  {
+    "employee": "Test1",
+    "type": "MEAL_IN",
+    "timestamp": "2026-01-14T20:00:00.000Z",
+    "source": "MISSED_PUNCH",
+    "requestId": "mkn015hb_zxmbam",
+    "createdAt": "2026-01-20T19:40:47.061Z"
+  },
+  {
+    "employee": "Test1",
+    "type": "MEAL_OUT",
+    "timestamp": "2026-01-14T21:00:00.000Z",
+    "source": "MISSED_PUNCH",
+    "requestId": "mkn015hb_zxmbam",
+    "createdAt": "2026-01-20T19:40:47.061Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "CLOCK_IN",
+    "timestamp": "2026-01-14T21:47:42.731Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "CLOCK_OUT",
+    "timestamp": "2026-01-14T21:47:43.626Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "CLOCK_IN",
+    "timestamp": "2026-01-14T21:47:50.587Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "CLOCK_OUT",
+    "timestamp": "2026-01-14T22:45:32.953Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "CLOCK_IN",
+    "timestamp": "2026-01-15T00:42:52.804Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "MEAL_IN",
+    "timestamp": "2026-01-15T00:42:54.316Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "MEAL_OUT",
+    "timestamp": "2026-01-15T00:42:55.090Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "REST_IN",
+    "timestamp": "2026-01-15T00:42:55.493Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "REST_OUT",
+    "timestamp": "2026-01-15T00:42:56.107Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "MEAL_IN",
+    "timestamp": "2026-01-15T00:43:22.508Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "MEAL_OUT",
+    "timestamp": "2026-01-15T00:43:24.396Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "REST_IN",
+    "timestamp": "2026-01-15T00:43:25.292Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "REST_OUT",
+    "timestamp": "2026-01-15T00:43:34.144Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "MEAL_IN",
+    "timestamp": "2026-01-15T00:45:42.604Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "MEAL_OUT",
+    "timestamp": "2026-01-15T00:51:20.171Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "CLOCK_OUT",
+    "timestamp": "2026-01-15T00:51:22.498Z"
+  },
+  {
+    "employee": "Test1",
+    "type": "CLOCK_OUT",
+    "timestamp": "2026-01-15T01:59:00.000Z",
+    "source": "MISSED_PUNCH",
+    "requestId": "mkn015hb_zxmbam",
+    "createdAt": "2026-01-20T19:40:47.061Z"
+  },
+  {
+    "employee": "lqs005",
+    "type": "CLOCK_IN",
+    "timestamp": "2026-01-15T06:20:12.708Z"
   }
 ]
