@@ -795,7 +795,7 @@ async function loadAdminPendingMissedPunch() {
   // ✅ 用 URLSearchParams + cache bust，避免缓存/代理导致看起来不刷新
   const params = new URLSearchParams();
   params.set("status", "pending");
-  params.set("range", "current");
+  params.set("range", "all");
   if (emp) params.set("employee", emp);
   params.set("_ts", String(Date.now())); // cache bust
 
