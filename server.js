@@ -967,13 +967,14 @@ if (startMs != null && endMs != null) {
 
 const empSet = new Set(dataset.map(r => r.employee));
 
-// ===== 收集 Missed Punch 元信息（状态/备注等）=====
+// ===== 收集 Missed Punch 元信息（状态/备注等，忽略 cancelled）=====
 const mpMetaMap = new Map(); // key = emp__date -> { status, reviewedBy, decisionNote }
 for (const mp of readMissed()) {
   if (!empSet.has(mp.employee)) continue;
   if (rangeStartYmd && rangeEndYmd) {
     if (mp.date < rangeStartYmd || mp.date > rangeEndYmd) continue;
   }
+  if (String(mp.status || "").toLowerCase() === "cancelled") continue;
 
   const key = `${mp.employee}__${mp.date}`;
   const prev = mpMetaMap.get(key);
