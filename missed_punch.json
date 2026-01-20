@@ -10,10 +10,320 @@
     "restIn": "14:40",
     "restOut": "14:50",
     "note": "test",
-    "status": "pending",
+    "status": "denied",
     "submittedAt": "2026-01-15T00:54:06.326Z",
+    "reviewedAt": "2026-01-15T19:18:25.445Z",
+    "reviewedBy": "admin",
+    "decisionNote": "Doesnt feel right"
+  },
+  {
+    "id": "mkfu0jfl_1986vo",
+    "employee": "lqs005",
+    "date": "2026-01-13",
+    "clockIn": "08:00",
+    "clockOut": "17:00",
+    "mealIn": "12:00",
+    "mealOut": "13:00",
+    "restIn": "14:40",
+    "restOut": "14:50",
+    "note": "Forgot",
+    "status": "approved",
+    "submittedAt": "2026-01-15T19:17:43.137Z",
+    "reviewedAt": "2026-01-15T19:19:15.765Z",
+    "reviewedBy": "admin",
+    "decisionNote": "ok"
+  },
+  {
+    "id": "mkfuv51r_x5j53w",
+    "employee": "lqs005",
+    "date": "2026-01-13",
+    "clockIn": "08:47",
+    "clockOut": "15:47",
+    "mealIn": "14:33",
+    "mealOut": "14:33",
+    "restIn": "14:40",
+    "restOut": "14:40",
+    "note": "Test deny",
+    "status": "denied",
+    "submittedAt": "2026-01-15T19:41:30.831Z",
+    "reviewedAt": "2026-01-15T19:41:45.556Z",
+    "reviewedBy": "admin",
+    "decisionNote": "Nope"
+  },
+  {
+    "id": "mkfuw6p6_v4drpa",
+    "employee": "lqs005",
+    "date": "2026-01-13",
+    "clockIn": "08:00",
+    "clockOut": "17:00",
+    "mealIn": "12:00",
+    "mealOut": "13:00",
+    "restIn": "14:40",
+    "restOut": "14:50",
+    "note": "",
+    "status": "approved",
+    "submittedAt": "2026-01-15T19:42:19.627Z",
+    "reviewedAt": "2026-01-15T19:43:17.272Z",
+    "reviewedBy": "admin",
+    "decisionNote": "okay"
+  },
+  {
+    "id": "mkgbq7jy_6b0upc",
+    "employee": "lqs005",
+    "date": "2026-01-13",
+    "clockIn": "08:10",
+    "clockOut": "15:00",
+    "mealIn": "16:45",
+    "mealOut": "16:51",
+    "restIn": "16:43",
+    "restOut": "16:43",
+    "note": "",
+    "status": "cancelled",
+    "submittedAt": "2026-01-16T03:33:34.270Z",
     "reviewedAt": "",
     "reviewedBy": "",
-    "decisionNote": ""
+    "decisionNote": "",
+    "cancelledAt": "2026-01-16T04:34:54.762Z",
+    "cancelledBy": "lqs005"
+  },
+  {
+    "id": "mkgbqmkt_tks075",
+    "employee": "lqs005",
+    "date": "2026-01-13",
+    "clockIn": "07:20",
+    "clockOut": "19:51",
+    "mealIn": "16:45",
+    "mealOut": "16:51",
+    "restIn": "16:43",
+    "restOut": "16:43",
+    "note": "",
+    "status": "cancelled",
+    "submittedAt": "2026-01-16T03:33:53.741Z",
+    "reviewedAt": "",
+    "reviewedBy": "",
+    "decisionNote": "",
+    "cancelledAt": "2026-01-16T04:34:51.577Z",
+    "cancelledBy": "lqs005"
+  },
+  {
+    "id": "mkge1tr8_qnzs1v",
+    "employee": "lqs005",
+    "date": "2026-01-13",
+    "clockIn": "08:20",
+    "clockOut": "18:51",
+    "mealIn": "16:45",
+    "mealOut": "16:51",
+    "restIn": "16:43",
+    "restOut": "16:43",
+    "note": "",
+    "status": "cancelled",
+    "submittedAt": "2026-01-16T04:38:35.492Z",
+    "reviewedAt": "",
+    "reviewedBy": "",
+    "decisionNote": "",
+    "cancelledAt": "2026-01-16T04:39:19.997Z",
+    "cancelledBy": "lqs005"
+  },
+  {
+    "id": "mkgea6km_0j97pk",
+    "employee": "lqs005",
+    "date": "2026-01-14",
+    "clockIn": "08:00",
+    "clockOut": "17:00",
+    "mealIn": "12:45",
+    "mealOut": "13:45",
+    "restIn": "16:43",
+    "restOut": "16:43",
+    "note": "Forgot",
+    "status": "approved",
+    "submittedAt": "2026-01-16T04:45:05.350Z",
+    "reviewedAt": "2026-01-16T04:46:13.267Z",
+    "reviewedBy": "admin",
+    "decisionNote": "",
+    "applied": {
+      "appliedAt": "2026-01-16T04:46:13.267Z",
+      "appliedBy": "admin",
+      "hours": {
+        "workHours": 9,
+        "lunchHours": 1,
+        "restHours": 0,
+        "payableHours": 8
+      },
+      "removedRecords": [
+        {
+          "employee": "lqs005",
+          "type": "CLOCK_IN",
+          "timestamp": "2026-01-14T21:47:42.731Z"
+        },
+        {
+          "employee": "lqs005",
+          "type": "CLOCK_OUT",
+          "timestamp": "2026-01-14T21:47:43.626Z"
+        },
+        {
+          "employee": "lqs005",
+          "type": "CLOCK_IN",
+          "timestamp": "2026-01-14T21:47:50.587Z"
+        },
+        {
+          "employee": "lqs005",
+          "type": "CLOCK_OUT",
+          "timestamp": "2026-01-14T22:45:32.953Z"
+        },
+        {
+          "employee": "lqs005",
+          "type": "CLOCK_IN",
+          "timestamp": "2026-01-15T00:42:52.804Z"
+        },
+        {
+          "employee": "lqs005",
+          "type": "MEAL_IN",
+          "timestamp": "2026-01-15T00:42:54.316Z"
+        },
+        {
+          "employee": "lqs005",
+          "type": "MEAL_OUT",
+          "timestamp": "2026-01-15T00:42:55.090Z"
+        },
+        {
+          "employee": "lqs005",
+          "type": "REST_IN",
+          "timestamp": "2026-01-15T00:42:55.493Z"
+        },
+        {
+          "employee": "lqs005",
+          "type": "REST_OUT",
+          "timestamp": "2026-01-15T00:42:56.107Z"
+        },
+        {
+          "employee": "lqs005",
+          "type": "MEAL_IN",
+          "timestamp": "2026-01-15T00:43:22.508Z"
+        },
+        {
+          "employee": "lqs005",
+          "type": "MEAL_OUT",
+          "timestamp": "2026-01-15T00:43:24.396Z"
+        },
+        {
+          "employee": "lqs005",
+          "type": "REST_IN",
+          "timestamp": "2026-01-15T00:43:25.292Z"
+        },
+        {
+          "employee": "lqs005",
+          "type": "REST_OUT",
+          "timestamp": "2026-01-15T00:43:34.144Z"
+        },
+        {
+          "employee": "lqs005",
+          "type": "MEAL_IN",
+          "timestamp": "2026-01-15T00:45:42.604Z"
+        },
+        {
+          "employee": "lqs005",
+          "type": "MEAL_OUT",
+          "timestamp": "2026-01-15T00:51:20.171Z"
+        },
+        {
+          "employee": "lqs005",
+          "type": "CLOCK_OUT",
+          "timestamp": "2026-01-15T00:51:22.498Z"
+        },
+        {
+          "employee": "lqs005",
+          "type": "CLOCK_IN",
+          "timestamp": "2026-01-15T06:20:12.708Z"
+        }
+      ],
+      "insertedRecords": [
+        {
+          "employee": "lqs005",
+          "type": "CLOCK_IN",
+          "timestamp": "2026-01-14T16:00:00.000Z",
+          "source": "MISSED_PUNCH",
+          "requestId": "mkgea6km_0j97pk",
+          "createdAt": "2026-01-16T04:46:13.264Z"
+        },
+        {
+          "employee": "lqs005",
+          "type": "CLOCK_OUT",
+          "timestamp": "2026-01-15T01:00:00.000Z",
+          "source": "MISSED_PUNCH",
+          "requestId": "mkgea6km_0j97pk",
+          "createdAt": "2026-01-16T04:46:13.264Z"
+        },
+        {
+          "employee": "lqs005",
+          "type": "MEAL_IN",
+          "timestamp": "2026-01-14T20:45:00.000Z",
+          "source": "MISSED_PUNCH",
+          "requestId": "mkgea6km_0j97pk",
+          "createdAt": "2026-01-16T04:46:13.264Z"
+        },
+        {
+          "employee": "lqs005",
+          "type": "MEAL_OUT",
+          "timestamp": "2026-01-14T21:45:00.000Z",
+          "source": "MISSED_PUNCH",
+          "requestId": "mkgea6km_0j97pk",
+          "createdAt": "2026-01-16T04:46:13.264Z"
+        },
+        {
+          "employee": "lqs005",
+          "type": "REST_IN",
+          "timestamp": "2026-01-15T00:43:00.000Z",
+          "source": "MISSED_PUNCH",
+          "requestId": "mkgea6km_0j97pk",
+          "createdAt": "2026-01-16T04:46:13.264Z"
+        },
+        {
+          "employee": "lqs005",
+          "type": "REST_OUT",
+          "timestamp": "2026-01-15T00:43:00.000Z",
+          "source": "MISSED_PUNCH",
+          "requestId": "mkgea6km_0j97pk",
+          "createdAt": "2026-01-16T04:46:13.264Z"
+        }
+      ]
+    }
+  },
+  {
+    "id": "mkgjww1h_2r7q4v",
+    "employee": "121398",
+    "date": "2026-01-15",
+    "clockIn": "08:00",
+    "clockOut": "17:00",
+    "mealIn": "12:00",
+    "mealOut": "12:30",
+    "restIn": "",
+    "restOut": "",
+    "note": "",
+    "status": "cancelled",
+    "submittedAt": "2026-01-16T07:22:42.870Z",
+    "reviewedAt": "",
+    "reviewedBy": "",
+    "decisionNote": "",
+    "cancelledAt": "2026-01-16T07:23:20.805Z",
+    "cancelledBy": "Qiushi Lyu"
+  },
+  {
+    "id": "mkho0zzf_oqsrv5",
+    "employee": "lqs005",
+    "date": "2026-01-15",
+    "clockIn": "08:32",
+    "clockOut": "16:00",
+    "mealIn": "09:09",
+    "mealOut": "09:09",
+    "restIn": "13:46",
+    "restOut": "13:46",
+    "note": "",
+    "status": "cancelled",
+    "submittedAt": "2026-01-17T02:05:39.244Z",
+    "reviewedAt": "",
+    "reviewedBy": "",
+    "decisionNote": "",
+    "cancelledAt": "2026-01-17T02:13:15.563Z",
+    "cancelledBy": "lqs005"
   }
 ]

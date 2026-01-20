@@ -285,6 +285,63 @@ function computeHoursFromMissed(mp) {
   return { workHours: workH, lunchHours: lunchH, restHours: restH, payableHours: payableH };
 }
 
+// ===== Apply approved missed punch into records.json (方案一) =====
+const PUNCH_TYPES = ["CLOCK_IN","CLOCK_OUT","MEAL_IN","MEAL_OUT","REST_IN","REST_OUT"];
+
+function applyMissedPunchToRecords(mp) {
+  const hours = computeHoursFromMissed(mp);
+  if (!hours) throw new Error("Invalid missed punch time range.");
+
+  const events = [
+    { type: "CLOCK_IN",  hm: mp.clockIn },
+    { type: "CLOCK_OUT", hm: mp.clockOut },
+  ];
+  if (mp.mealIn && mp.mealOut) {
+    events.push({ type: "MEAL_IN", hm: mp.mealIn });
+    events.push({ type: "MEAL_OUT", hm: mp.mealOut });
+  }
+  if (mp.restIn && mp.restOut) {
+    events.push({ type: "REST_IN", hm: mp.restIn });
+    events.push({ type: "REST_OUT", hm: mp.restOut });
+  }
+
+  let records = readRecords();
+
+  const isPunch = (t) => ["CLOCK_IN","CLOCK_OUT","MEAL_IN","MEAL_OUT","REST_IN","REST_OUT"].includes(t);
+  const sameKey = (r) => r.employee === mp.employee && localYMD(r.timestamp) === mp.date && isPunch(r.type);
+
+  // ✅ 1) 把将要被覆盖的旧记录先存下来（审计）
+  const removed = records.filter(sameKey);
+
+  // ✅ 2) 覆盖式写入：先删掉旧 punch，再写入新 punch
+  records = records.filter(r => !sameKey(r));
+
+  const inserted = [];
+  const nowIso = new Date().toISOString();
+
+  for (const e of events) {
+    const ts = new Date(localDateTimeMs(mp.date, e.hm)).toISOString();
+    const rec = {
+      employee: mp.employee,
+      type: e.type,
+      timestamp: ts,
+      // ✅ 追溯字段（不影响你现有计算逻辑）
+      source: "MISSED_PUNCH",
+      requestId: mp.id,
+      createdAt: nowIso,
+    };
+    records.push(rec);
+    inserted.push(rec);
+  }
+
+  records.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+  writeRecords(records);
+
+  return { removed, inserted, hours };
+}
+
+
+
 /** 把记录按 “employee + 本地日期(yyyy-mm-dd)” 分组，并计算每日汇总 */
 function buildDailySummary(rows) {
   // rows: [{ employee, type, timestamp }]
@@ -659,6 +716,21 @@ app.post("/api/missed_punch", requireLogin, (req, res) => {
   if (!hours) return res.status(400).json({ message: "Invalid time range in request." });
 
   const all = readMissed();
+
+  // ✅ 防止同一天重复提交（只允许在 denied/cancelled 后重新提交）
+  const sameDay = all
+    .filter(x => x.employee === mp.employee && x.date === mp.date)
+    .sort((a, b) => (b.submittedAt || "").localeCompare(a.submittedAt || ""));
+  const latest = sameDay[0];
+  const latestStatus = String(latest?.status || "").toLowerCase();
+
+  if (latest && !["denied", "cancelled"].includes(latestStatus)) {
+    return res.status(409).json({
+      message: `A request for ${mp.date} already exists (status: ${latestStatus}).`
+    });
+  }
+
+
   const id = `${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
 
   all.push({
@@ -707,11 +779,38 @@ app.get("/api/missed_punch", requireLogin, (req, res) => {
   res.json(list);
 });
 
+// 员工撤销 Missed Punch（仅 pending 可撤销）
+app.post("/api/missed_punch/:id/cancel", requireLogin, (req, res) => {
+  const u = req.session.user;
+  if (u.role !== "employee") return res.status(403).json({ message: "Forbidden" });
+
+  const all = readMissed();
+  const idx = all.findIndex(x => x.id === req.params.id);
+  if (idx < 0) return res.status(404).json({ message: "Not found" });
+
+  const item = all[idx];
+
+  // 只能撤销自己的
+  if (item.employee !== u.employee) return res.status(403).json({ message: "Forbidden" });
+
+  // 只有 pending 能撤销
+  if (String(item.status || "").toLowerCase() !== "pending") {
+    return res.status(400).json({ message: "Only pending requests can be cancelled." });
+  }
+
+  item.status = "cancelled";
+  item.cancelledAt = new Date().toISOString();
+  item.cancelledBy = u.username;
+
+  writeMissed(all);
+  res.json({ success: true });
+});
+
+
 // 管理员审批/拒绝
 app.post("/api/missed_punch/:id/review", requireLogin, requireAdmin, (req, res) => {
   const { id } = req.params;
   const { action, note } = req.body || {};
-
   if (action !== "approve" && action !== "deny") {
     return res.status(400).json({ message: "action must be approve or deny" });
   }
@@ -719,6 +818,27 @@ app.post("/api/missed_punch/:id/review", requireLogin, requireAdmin, (req, res) 
   const all = readMissed();
   const idx = all.findIndex(x => x.id === id);
   if (idx < 0) return res.status(404).json({ message: "Not found" });
+
+  // ✅ 防止重复审批
+  if (all[idx].status && all[idx].status !== "pending") {
+    return res.status(400).json({ message: "This request was already reviewed." });
+  }
+
+  // ✅ approve 才落地 records，并写审计信息
+  if (action === "approve") {
+    try {
+      const audit = applyMissedPunchToRecords(all[idx]);
+      all[idx].applied = {
+        appliedAt: new Date().toISOString(),
+        appliedBy: req.session.user.username,
+        hours: audit.hours,
+        removedRecords: audit.removed,
+        insertedRecords: audit.inserted
+      };
+    } catch (e) {
+      return res.status(400).json({ message: e.message || "Failed to apply records." });
+    }
+  }
 
   all[idx].status = action === "approve" ? "approved" : "denied";
   all[idx].reviewedAt = new Date().toISOString();
@@ -728,6 +848,8 @@ app.post("/api/missed_punch/:id/review", requireLogin, requireAdmin, (req, res) 
   writeMissed(all);
   res.json({ success: true });
 });
+
+
 
 // 双周汇总（服务器版本，可被前端调用；前端已内置客户端计算作为备份）
 app.get("/api/summary", requireLogin, (req, res) => {
