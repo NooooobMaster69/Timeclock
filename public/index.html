@@ -418,6 +418,29 @@ button[disabled] .paid-badge{
   opacity: .95;
 }
 
+/* Submitted requests section */
+.missed-requests{
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid #fed7aa;
+  background: #fffdf8;
+}
+.missed-requests-title{
+  margin: 0 0 8px;
+  font-weight: 800;
+  font-size: 14px;
+  color: #92400e;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.missed-requests .missed-items{
+  margin-top: 0;
+  border-top: none;
+  padding-top: 0;
+}
+
 .badge{
   display:inline-flex;
   align-items:center;
@@ -755,10 +778,12 @@ padding: 12px 22px;
     <div class="missed-items" id="missedPunchItems"></div>
 
     <!-- 员工自己提交的 requests（有的话 JS 显示） -->
-    <div id="mpReqTitle" class="missed-title" style="display:none; margin-top:10px;">
-      📬 Your submitted requests
+    <div class="missed-requests" id="mpReqSection" style="display:none;">
+      <div id="mpReqTitle" class="missed-requests-title">
+        📬 Your submitted requests
+      </div>
+      <div class="missed-items" id="mpReqItems"></div>
     </div>
-    <div class="missed-items" id="mpReqItems" style="display:none;"></div>
   </div>
 
   <!-- Recent records：必须在 missedPunchCard 外面 ✅ -->

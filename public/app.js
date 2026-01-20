@@ -459,6 +459,7 @@ async function refreshMyMissedPunchUI() {
   const quickBtn = document.getElementById("mpQuickBtn"); // ✅ 常驻小按钮
 
   // ✅ 新增：请求状态区
+  const reqSection = document.getElementById("mpReqSection");
   const reqTitle = document.getElementById("mpReqTitle");
   const reqItems = document.getElementById("mpReqItems");
 
@@ -485,8 +486,7 @@ const periodEnd   = curEnd;
     records = await api("/api/records");
   } catch (e) {
     card.style.display = "none";
-    if (reqTitle) reqTitle.style.display = "none";
-    if (reqItems) reqItems.style.display = "none";
+    if (reqSection) reqSection.style.display = "none";
     return;
   }
 // ✅ 如果服务器 state 显示 Off（被 reset），就允许把“今天的 open punch”也当异常提示
@@ -607,12 +607,11 @@ else card.classList.add("neutral");
   }).join("");
   }
   // 4) 渲染“我的申请列表”（通知/状态栏）
-  if (reqTitle && reqItems) {
+  if (reqSection && reqItems) {
     if (!myReq.length) {
-      reqTitle.style.display = "none";
-      reqItems.style.display = "none";
+      reqSection.style.display = "none";
     } else {
-      reqTitle.style.display = "block";
+      reqSection.style.display = "block";
       reqItems.style.display = "flex";
 
       const sorted = [...myReq]
