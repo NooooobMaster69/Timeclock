@@ -967,6 +967,29 @@ if (startMs != null && endMs != null) {
 
 const empSet = new Set(dataset.map(r => r.employee));
 
+// ===== 收集 Missed Punch 元信息（状态/备注等）=====
+const mpMetaMap = new Map(); // key = emp__date -> { status, reviewedBy, decisionNote }
+for (const mp of readMissed()) {
+  if (!empSet.has(mp.employee)) continue;
+  if (rangeStartYmd && rangeEndYmd) {
+    if (mp.date < rangeStartYmd || mp.date > rangeEndYmd) continue;
+  }
+
+  const key = `${mp.employee}__${mp.date}`;
+  const prev = mpMetaMap.get(key);
+  const prevTime = new Date(prev?.submittedAt || 0).getTime();
+  const nextTime = new Date(mp.submittedAt || 0).getTime();
+
+  if (!prev || nextTime >= prevTime) {
+    mpMetaMap.set(key, {
+      status: mp.status || "",
+      reviewedBy: mp.reviewedBy || "",
+      decisionNote: mp.decisionNote || "",
+      submittedAt: mp.submittedAt || ""
+    });
+  }
+}
+
 for (const mp of approvedAll) {
   if (!empSet.has(mp.employee)) continue;
 
@@ -993,10 +1016,20 @@ for (const mp of approvedAll) {
 }
 
 // 用覆盖后的 Map 生成 summary 数组
-const summary2 = Array.from(sumMap.values()).sort((a, b) => {
-  if (a.employee === b.employee) return a.date.localeCompare(b.date);
-  return (a.employee || "").localeCompare(b.employee || "");
-});
+const summary2 = Array.from(sumMap.values())
+  .map((row) => {
+    const meta = mpMetaMap.get(`${row.employee}__${row.date}`) || {};
+    return {
+      ...row,
+      mpStatus: meta.status || "",
+      mpReviewedBy: meta.reviewedBy || "",
+      mpDecisionNote: meta.decisionNote || ""
+    };
+  })
+  .sort((a, b) => {
+    if (a.employee === b.employee) return a.date.localeCompare(b.date);
+    return (a.employee || "").localeCompare(b.employee || "");
+  });
 
   // ===== Excel（Summary + Records）=====
   const wb = new ExcelJS.Workbook();
@@ -1004,13 +1037,16 @@ const summary2 = Array.from(sumMap.values()).sort((a, b) => {
   // Summary
   const ws = wb.addWorksheet("Summary", { properties: { defaultRowHeight: 18 } });
   ws.columns = [
-    { header: "Date",          key: "date",         width: 12 },
-    { header: "First In",      key: "firstIn",      width: 10 },
-    { header: "Last Out",      key: "lastOut",      width: 10 },
-    { header: "Work Hours",    key: "workHours",    width: 12 },
-    { header: "Lunch Hours",   key: "lunchHours",   width: 12 },
-    { header: "Rest Hours",    key: "restHours",    width: 12 },
-    { header: "Payable Hours", key: "payableHours", width: 14 },
+    { header: "Date",             key: "date",           width: 12 },
+    { header: "First In",         key: "firstIn",        width: 10 },
+    { header: "Last Out",         key: "lastOut",        width: 10 },
+    { header: "Missed Status",    key: "mpStatus",       width: 14 },
+    { header: "Reviewed By",      key: "mpReviewedBy",   width: 16 },
+    { header: "Decision Note",    key: "mpDecisionNote", width: 22 },
+    { header: "Work Hours",       key: "workHours",      width: 12 },
+    { header: "Lunch Hours",      key: "lunchHours",     width: 12 },
+    { header: "Rest Hours",       key: "restHours",      width: 12 },
+    { header: "Payable Hours",    key: "payableHours",   width: 14 },
   ];
 
   // 按员工分区
@@ -1030,7 +1066,7 @@ summary2.forEach(r => {
     titleRow.getCell(1).value = `Employee: ${empName} (${emp})`;
     styleSectionTitle(titleRow);
     titleRow.commit();
-    ws.mergeCells(titleRowIdx, 1, titleRowIdx, 7);
+    ws.mergeCells(titleRowIdx, 1, titleRowIdx, 10);
 
     // 表头（只给已用 7 列上色）
     const headerRow = ws.addRow(ws.columns.map(c => c.header));
@@ -1040,8 +1076,16 @@ summary2.forEach(r => {
     let sumWork = 0, sumLunch = 0, sumRest = 0, sumPay = 0;
     rows.forEach(r => {
       const dataRow = ws.addRow([
-        r.date, r.firstIn, r.lastOut,
-        r.workHours, r.lunchHours, r.restHours, r.payableHours
+        r.date,
+        r.firstIn,
+        r.lastOut,
+        r.mpStatus || "",
+        r.mpReviewedBy || "",
+        r.mpDecisionNote || "",
+        r.workHours,
+        r.lunchHours,
+        r.restHours,
+        r.payableHours
       ]);
       styleBody(dataRow);
       sumWork  += r.workHours;
@@ -1052,7 +1096,7 @@ summary2.forEach(r => {
 
     // 小计行：加粗、淡灰底、四边框
     const subtotal = ws.addRow([
-      "", "", "Subtotal",
+      "", "", "Subtotal", "", "", "",
       +sumWork.toFixed(2),
       +sumLunch.toFixed(2),
       +sumRest.toFixed(2),
@@ -1070,7 +1114,7 @@ summary2.forEach(r => {
     });
 
     // 分隔空白行
-    const spacer = ws.addRow(["","","","","","",""]);
+    const spacer = ws.addRow(["","","","","","","","","",""]);
     spacer.height = 6;
   } // ← 别漏这个大括号（关闭 for 循环）
 
