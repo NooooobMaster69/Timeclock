@@ -27,6 +27,7 @@ let _toastTimer = null;
 let _userRole = "";
 let _userGroup = "";
 let _empNameMap = new Map(); // employeeId -> displayName
+let _lastState = null; // ✅ 缓存 /api/state，给 missed punch 判断用
 
 function toast(msg) {
   const el = document.getElementById("toast");
@@ -319,7 +320,7 @@ function hm(dateObj) {
 }
 
 // 检测：在 pay period 内，哪一天有 “未配对”的事件
-function detectMissedDays(records, periodStart, periodEnd, isTherapist) {
+function detectMissedDays(records, periodStart, periodEnd, isTherapist, opts = {}) {
   const startMs = periodStart.getTime();
   const endMs = periodEnd.getTime() + 24 * 3600 * 1000 - 1;
 
@@ -394,21 +395,22 @@ function detectMissedDays(records, periodStart, periodEnd, isTherapist) {
     }
   }
 
-  // 扫尾：只对“今天之前”的日期判 Missing end（今天的 open 视为 in-progress）
 const missed = [];
 const todayYMD = toYMD(new Date());
+const forceToday = !!opts.forceTodayClose;
 
 for (const [ymd, st] of dayMap.entries()) {
   const isPastDay = ymd < todayYMD;
+  const treatAsClosedDay = isPastDay || (forceToday && ymd === todayYMD);
 
-  // ✅ 只有过去日期，才把 open 视为 Missing end
-  if (isPastDay) {
-    if (st.openClockIn != null) st.issues.add("Missing CLOCK_OUT");
+  if (treatAsClosedDay) {
+    if (st.openClockIn != null) {
+      st.issues.add(ymd === todayYMD ? "Missing CLOCK_OUT (auto reset)" : "Missing CLOCK_OUT");
+    }
     if (st.openMealIn != null) st.issues.add("Missing lunch end");
     if (!isTherapist && st.openRestIn != null) st.issues.add("Missing rest end");
   }
 
-  // ✅ 仍然允许今天显示“真实错误”（比如 CLOCK_OUT 没 CLOCK_IN、Duplicate CLOCK_IN）
   if (st.issues.size) {
     missed.push({
       date: ymd,
@@ -419,10 +421,31 @@ for (const [ymd, st] of dayMap.entries()) {
 }
 
 
+
   // 排序（日期升序）
   missed.sort((a, b) => a.date.localeCompare(b.date));
   return missed;
 }
+
+function mpBadge(status) {
+  const s = String(status || "").toLowerCase();
+  if (!s) return "";
+  return `<span class="badge ${esc(s)}">${esc(s.toUpperCase())}</span>`;
+}
+
+// 可选：员工撤销（需要后端支持 /api/missed_punch/:id/cancel）
+async function cancelMissedPunch(id) {
+  id = decodeURIComponent(id);
+  if (!confirm("Cancel this missed punch request?")) return;
+  try {
+    await api(`/api/missed_punch/${encodeURIComponent(id)}/cancel`, { method: "POST" });
+    toast("✅ Request cancelled.");
+    await refreshMyMissedPunchUI();
+  } catch (e) {
+    toast("❌ Cancel failed: " + (e.message || "Unknown error"));
+  }
+}
+window.cancelMissedPunch = cancelMissedPunch;
 
 async function refreshMyMissedPunchUI() {
   // 只对员工显示
@@ -431,51 +454,215 @@ async function refreshMyMissedPunchUI() {
   const card = document.getElementById("missedPunchCard");
   const items = document.getElementById("missedPunchItems");
   const btn = document.getElementById("mpOpenBtn");
+  const titleEl = document.getElementById("missedPunchTitle");
+  const subEl   = document.getElementById("missedPunchSubtitle");
+  const quickBtn = document.getElementById("mpQuickBtn"); // ✅ 常驻小按钮
+
+  // ✅ 新增：请求状态区
+  const reqTitle = document.getElementById("mpReqTitle");
+  const reqItems = document.getElementById("mpReqItems");
+
   if (!card || !items || !btn) return;
 
-  // therapist：rest 在 UI 已隐藏，但 missed 检测里也要忽略 rest
   const isTherapist = _userGroup === "therapist";
+  // ✅ 检测范围：上一 pay period + 当前 pay period（避免 15→16 或 月末→1 丢提示）
+const now = new Date();
+const { periodStart: curStart, periodEnd: curEnd } = getPayPeriodRange(now);
 
-  // 取 pay period
-  const { periodStart, periodEnd } = getPayPeriodRange(new Date());
+// 用“当前周期开始的前一天”去算上一周期
+const prevAnchor = new Date(curStart);
+prevAnchor.setDate(prevAnchor.getDate() - 1);
+const { periodStart: prevStart } = getPayPeriodRange(prevAnchor);
 
-  // 拉 records
+// 合并窗口
+const periodStart = prevStart;
+const periodEnd   = curEnd;
+
+
+  // 1) 拉 records（用于 detectMissedDays）
   let records = [];
   try {
     records = await api("/api/records");
   } catch (e) {
     card.style.display = "none";
+    if (reqTitle) reqTitle.style.display = "none";
+    if (reqItems) reqItems.style.display = "none";
     return;
   }
+// ✅ 如果服务器 state 显示 Off（被 reset），就允许把“今天的 open punch”也当异常提示
+const forceTodayClose = !!(_lastState && !_lastState.clockedIn);
 
-  const missedDays = detectMissedDays(records, periodStart, periodEnd, isTherapist);
+const missedDays = detectMissedDays(records, periodStart, periodEnd, isTherapist, {
+  forceTodayClose
+});
 
-  if (!missedDays.length) {
-    card.style.display = "none";
-    return;
+
+// 2) 拉该员工同一检测窗口(periodStart~periodEnd)的 requests
+let myReq = [];
+try {
+  const params = new URLSearchParams();
+  params.set("range", "custom");
+  params.set("start", toYMD(periodStart));
+  params.set("end", toYMD(periodEnd));
+  params.set("_ts", String(Date.now()));
+
+  myReq = await api(`/api/missed_punch?${params.toString()}`);
+  if (!Array.isArray(myReq)) myReq = [];
+} catch (e) {
+  myReq = [];
+}
+
+// 同一天可能有多条（允许重提的话），取最新一条用于“那一天的状态”
+const latestReqByDate = new Map();
+for (const r of myReq) {
+  if (!r?.date) continue;
+  const prev = latestReqByDate.get(r.date);
+  const t1 = new Date(prev?.submittedAt || 0).getTime();
+  const t2 = new Date(r?.submittedAt || 0).getTime();
+  if (!prev || t2 >= t1) latestReqByDate.set(r.date, r);
+}
+
+// ✅ unresolvedDays：仍然“需要员工Fix”的日期（没提交过 或 被拒/取消）
+const unresolvedDays = missedDays.filter(d => {
+  const rr = latestReqByDate.get(d.date);
+  const st = String(rr?.status || "").toLowerCase();
+  return !rr || ["denied", "cancelled"].includes(st);
+});
+
+const hasIssues = unresolvedDays.length > 0;
+const hasReq = myReq.length > 0;
+
+// ✅ 动态标题：approve/pending 后不再一直显示 ⚠️
+if (titleEl && subEl) {
+  if (hasIssues) {
+    titleEl.textContent = "⚠️ Missed punches detected";
+    subEl.textContent =
+      "Please submit a Missed Punch Request. An admin will review before payroll/export counts these hours.";
+  } else if (hasReq) {
+    titleEl.textContent = "✅ Missed Punch reviewed / no issues detected";
+    subEl.textContent =
+      "No missed punches detected for this pay period. You can still submit a request anytime if your times look wrong.";
+  } else {
+    titleEl.textContent = "📝 Missed Punch Request";
+    subEl.textContent =
+      "Use this if you forgot to punch (meal/rest/in/out). An admin will review before payroll/export.";
   }
+}
 
-  // 显示卡片
-  card.style.display = "block";
 
-  // 默认打开 modal 的日期：第一条缺卡日期
-  btn.onclick = () => openMissedPunchModal(missedDays[0]?.date, missedDays[0]?.preset);
-_missedPresetMap = new Map(missedDays.map(d => [d.date, d.preset || {}]));
+ card.style.display = "block"; // ✅ 员工端永远显示（入口永远在）
 
-  items.innerHTML = missedDays.map(d => {
+// ✅ 状态上色
+card.classList.remove("warn","ok","neutral");
+if (hasIssues) card.classList.add("warn");
+else if (hasReq) card.classList.add("ok");
+else card.classList.add("neutral");
+
+  // 给 modal 预填用（沿用你原逻辑）
+  _missedPresetMap = new Map(missedDays.map(d => [d.date, d.preset || {}]));
+
+  // 默认打开 modal 的日期：优先挑“还没提交/被拒绝/已取消”的那天
+ const defaultDay = unresolvedDays[0]?.date || missedDays[0]?.date || "";
+
+
+  const today = toYMD(new Date());
+  const openDay = defaultDay || today;
+
+  btn.onclick = () => openMissedPunchModal(openDay);
+  if (quickBtn) quickBtn.onclick = () => openMissedPunchModal(openDay);
+
+  // 3) 渲染 missedDays 列表（合并状态）
+    if (!hasIssues) {
+    items.style.display = "none";
+    items.innerHTML = "";
+  } else {
+    items.style.display = "flex";
+    items.innerHTML = unresolvedDays.map(d => {
     const issueText = d.issues.join(" / ");
+    const rr = latestReqByDate.get(d.date);
+    const st = String(rr?.status || "").toLowerCase();
+
+    // 有 pending/approved 时不再显示 Fix（避免重复提交）；denied/cancelled 允许再打开
+    const canFix = !rr || ["denied", "cancelled"].includes(st);
+
     return `
       <div class="missed-item">
         <div class="missed-item-left">
-          <div class="missed-date">${esc(d.date)}</div>
-          <div class="missed-detail">${esc(issueText)}</div>
+          <div class="missed-date">
+            ${esc(d.date)}
+            ${rr ? mpBadge(st) : ""}
+          </div>
+          <div class="missed-detail">
+            ${esc(issueText)}
+            ${rr ? ` • Request: ${esc(st || "")}` : ""}
+          </div>
         </div>
-        <button class="purple btn-sm" type="button"
-  onclick="openMissedPunchModal('${d.date}')">Fix</button>
-
+        ${
+          canFix
+            ? `<button class="purple btn-sm" type="button" onclick="openMissedPunchModal('${esc(d.date)}')">Fix</button>`
+            : `<span style="font-size:12px; color:#7c2d12; font-weight:700;">Submitted</span>`
+        }
       </div>
     `;
   }).join("");
+  }
+  // 4) 渲染“我的申请列表”（通知/状态栏）
+  if (reqTitle && reqItems) {
+    if (!myReq.length) {
+      reqTitle.style.display = "none";
+      reqItems.style.display = "none";
+    } else {
+      reqTitle.style.display = "block";
+      reqItems.style.display = "flex";
+
+      const sorted = [...myReq]
+  .sort((a, b) => (b.submittedAt || "").localeCompare(a.submittedAt || ""))
+  .slice(0, 5);
+
+
+      reqItems.innerHTML = sorted.map(r => {
+        const st = String(r.status || "").toLowerCase();
+        const note = r.decisionNote ? ` • Note: ${esc(r.decisionNote)}` : "";
+        const reviewed = r.reviewedAt ? ` • Reviewed` : "";
+        const canCancel = st === "pending";
+
+        return `
+          <div class="missed-item">
+            <div class="missed-item-left">
+              <div class="missed-date">
+                ${esc(r.date || "")}
+                ${mpBadge(st)}
+              </div>
+              <div class="missed-detail">
+                ${esc(r.clockIn || "")}-${esc(r.clockOut || "")}
+                ${reviewed}${note}
+              </div>
+            </div>
+            ${
+              canCancel
+                ? `<button class="black btn-sm" type="button"
+                     onclick="cancelMissedPunch('${encodeURIComponent(r.id)}')">Cancel</button>`
+                : ""
+            }
+          </div>
+        `;
+      }).join("");
+
+      // ✅ “通知感”：如果有新 reviewed 的，登录后 toast 一下
+      try {
+        const lastSeen = localStorage.getItem("mpLastSeenReviewedAt") || "";
+        const reviewedList = sorted.filter(x => x.reviewedAt).map(x => x.reviewedAt).sort();
+        const latest = reviewedList[reviewedList.length - 1] || "";
+        if (latest && (!lastSeen || latest > lastSeen)) {
+          const newly = sorted.filter(x => x.reviewedAt && x.reviewedAt > lastSeen);
+          if (newly.length) {
+            toast("📬 Missed Punch update:\n" + newly.map(x => `${x.date}: ${x.status}`).join("\n"));
+          }
+          localStorage.setItem("mpLastSeenReviewedAt", latest);
+        }
+      } catch (_) {}
+    }
+  }
 }
 
 function openMissedPunchModal(dateStr) {
@@ -688,7 +875,8 @@ async function loadStateAndButtons() {
   try {
     const s = await api("/api/state");
     _userRole = s.role;
-_userGroup = s.group;
+    _lastState = s;
+    _userGroup = s.group;
     const isAdmin = s.role === "admin";
     const isTherapist = s.group === "therapist";
 
@@ -743,6 +931,10 @@ _userGroup = s.group;
       if (employeeSummaryButtons) employeeSummaryButtons.style.display = "";
       if (employeeCustomRange)   employeeCustomRange.style.display   = "";
     }
+if (isAdmin) {
+  const az = document.getElementById("adminZone");
+  if (az) az.style.display = "block";
+}
 
     // Admin 区块显示/隐藏 & 员工列表加载
     await setupAdminZone(s.role);
