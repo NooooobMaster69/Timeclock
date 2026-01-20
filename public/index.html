@@ -418,6 +418,40 @@ button[disabled] .paid-badge{
   opacity: .95;
 }
 
+/* Submitted requests section (separate history card) */
+.missed-history-card{
+  display: none;
+  margin: 0 0 14px;
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+.missed-history-title{
+  margin: 0 0 10px;
+  font-weight: 800;
+  font-size: 14px;
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.missed-history-card .missed-items{
+  margin-top: 0;
+  border-top: none;
+  padding-top: 0;
+}
+.missed-history-card .missed-item{
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  border-radius: 12px;
+  padding: 8px 10px;
+}
+.missed-history-card .missed-date{
+  color: #0f172a;
+}
+
+
 .badge{
   display:inline-flex;
   align-items:center;
@@ -754,11 +788,14 @@ padding: 12px 22px;
     <!-- 系统检测到的 missed days（有的话 JS 填充） -->
     <div class="missed-items" id="missedPunchItems"></div>
 
-    <!-- 员工自己提交的 requests（有的话 JS 显示） -->
-    <div id="mpReqTitle" class="missed-title" style="display:none; margin-top:10px;">
-      📬 Your submitted requests
-    </div>
-    <div class="missed-items" id="mpReqItems" style="display:none;"></div>
+     </div>
+
+  <!-- 员工自己提交的 requests（历史记录，单独显示） -->
+  <div class="missed-history-card" id="mpReqSection">
+    <div id="mpReqTitle" class="missed-history-title">
+        📬 Your submitted requests
+      </div>
+       <div class="missed-items" id="mpReqItems"></div>
   </div>
 
   <!-- Recent records：必须在 missedPunchCard 外面 ✅ -->
