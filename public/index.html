@@ -359,6 +359,16 @@ button[disabled] .paid-badge{
   justify-content:space-between;
   gap: 12px;
 }
+/* Missed card 状态色：更“像 UI”，不吓人 */
+.missed-card.warn { background:#fff7ed; border-color:#fdba74; }
+.missed-card.ok { background:#f0fdf4; border-color:#86efac; }
+.missed-card.neutral { background:#f8fafc; border-color:#cbd5e1; }
+.missed-card.ok .missed-sub{ color:#166534; }
+.missed-card.neutral .missed-sub{ color:#334155; }
+.missed-card.warn .missed-sub{ color:#7c2d12; }
+
+.missed-card.ok .missed-title { color:#166534; }
+.missed-card.neutral .missed-title { color:#0f172a; }
 
 .missed-title{
   font-weight: 800;
@@ -431,6 +441,18 @@ button[disabled] .paid-badge{
   background:#f0fdf4;
   color:#166534;
 }
+.badge.denied{
+  border-color:#ef4444;
+  background:#fef2f2;
+  color:#991b1b;
+}
+.badge.cancelled{
+  border-color:#94a3b8;
+  background:#f1f5f9;
+  color:#334155;
+}
+
+
 
 .btn-sm{
   padding: 8px 12px;
@@ -692,50 +714,57 @@ padding: 12px 22px;
 
 
 <!-- Summary / Export / Records（admin/employee 共用） -->
-<div class="container">
+<div class="container" id="summaryContainer">
   <h2 id="summaryTitle">📊 Summary Zone</h2>
+
   <div class="pay-period-bar" id="payPeriodBar">
     <span class="pay-period-badge" id="payPeriodLabel">Current pay period</span>
     <span class="pay-period-range" id="payPeriodRange">Loading…</span>
   </div>
-<!-- Missed Punch banner：放在 pay period bar 下面 -->
-<div class="missed-card" id="missedPunchCard">
-  <div class="missed-card-top">
-    <div>
-      <div class="missed-title">⚠️ Missed punches detected</div>
-      <div class="missed-sub" id="missedPunchSubtitle">
-        Please submit a Missed Punch Request. An admin will review before payroll/export counts these hours.
-      </div>
-    </div>
 
-    <button class="purple btn-sm" id="mpOpenBtn" onclick="openMissedPunchModal()">
-      Missed Punch Request
-    </button>
+  <div class="summary-buttons" id="employeeSummaryButtons">
+    <button class="purple" onclick="viewSummary()">View Hours This Period</button>
+    <button class="black"  onclick="exportMyCurrent()">Export Current Period</button>
+    <button class="black"  onclick="exportMyAll()">Export All History</button>
   </div>
 
-  <div class="missed-items" id="missedPunchItems"></div>
-</div>
+  <div class="custom-range" id="employeeCustomRange">
+    <span>Custom range (me):</span>
+    <input type="date" id="myRangeStart" />
+    <span>to</span>
+    <input type="date" id="myRangeEnd" />
+    <button class="black" onclick="exportMyCustom()">Export</button>
+  </div>
 
-<div class="summary-buttons" id="employeeSummaryButtons">
-  <button class="purple" onclick="viewSummary()">View Hours This Period</button>
-  <button class="black"  onclick="exportMyCurrent()">Export Current Period</button>
-  <button class="black"  onclick="exportMyAll()">Export All History</button>
-</div>
+  <!-- Missed Punch banner（放在 Summary Zone 下面 ✅） -->
+  <div class="missed-card" id="missedPunchCard">
+    <div class="missed-card-top">
+      <div>
+        <div class="missed-title" id="missedPunchTitle">⚠️ Missed punches detected</div>
+        <div class="missed-sub" id="missedPunchSubtitle">
+          Please submit a Missed Punch Request. An admin will review before payroll/export counts these hours.
+        </div>
+      </div>
 
-<div class="custom-range" id="employeeCustomRange">
-  <span>Custom range (me):</span>
-  <input type="date" id="myRangeStart" />
-  <span>to</span>
-  <input type="date" id="myRangeEnd" />
-  <button class="black" onclick="exportMyCustom()">Export</button>
-</div>
+      <button class="purple btn-sm" id="mpOpenBtn" onclick="openMissedPunchModal()">
+        Missed Punch Request
+      </button>
+    </div>
 
+    <!-- 系统检测到的 missed days（有的话 JS 填充） -->
+    <div class="missed-items" id="missedPunchItems"></div>
 
+    <!-- 员工自己提交的 requests（有的话 JS 显示） -->
+    <div id="mpReqTitle" class="missed-title" style="display:none; margin-top:10px;">
+      📬 Your submitted requests
+    </div>
+    <div class="missed-items" id="mpReqItems" style="display:none;"></div>
+  </div>
 
-  <!-- Recent records：普通员工显示，admin 会被 JS 隐藏 -->
+  <!-- Recent records：必须在 missedPunchCard 外面 ✅ -->
   <div id="log"></div>
 
-  <!-- Admin only 导出 -->
+  <!-- Admin only -->
   <div id="adminZone">
     <h3>👑 Admin Zone</h3>
 
@@ -758,14 +787,14 @@ padding: 12px 22px;
       <input type="date" id="adminRangeEnd" />
       <button class="black" style="margin-left: 6px;" onclick="adminExportCustom()">Export</button>
     </div>
-    <!-- Admin: Missed Punch Requests (Pending) -->
-<div id="adminMissedPunchPanel" style="margin-top:14px;">
-  <div style="font-weight:800; margin: 10px 0 8px;">📝 Missed Punch Requests (Pending)</div>
-  <div id="adminMissedPunchList" style="display:flex; flex-direction:column; gap:10px;"></div>
-</div>
 
+    <div id="adminMissedPunchPanel" style="margin-top:14px;">
+      <div style="font-weight:800; margin: 10px 0 8px;">📝 Missed Punch Requests (Pending)</div>
+      <div id="adminMissedPunchList" style="display:flex; flex-direction:column; gap:10px;"></div>
+    </div>
   </div>
 </div>
+
 <!-- Missed Punch Modal（默认隐藏，JS 控制 show/hide） -->
 <div class="mp-overlay" id="mpOverlay">
   <div class="mp-modal">
