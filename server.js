@@ -6,7 +6,13 @@ const bcrypt = require("bcrypt");
 const ExcelJS = require("exceljs");
 
 const app = express();
-const PORT = 3000;
+const PORT = Number(process.env.PORT) || 3000;
+const SESSION_SECRET = process.env.SESSION_SECRET || "change-me";
+const IS_PROD = process.env.NODE_ENV === "production";
+
+if (SESSION_SECRET === "change-me") {
+  console.warn("⚠️ SESSION_SECRET is not set. Please set it for production.");
+}
 
 // ---- Files ----
 const USERS_FILE = path.join(__dirname, "users.json");
@@ -19,13 +25,13 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(
   session({
-    secret: "360WPT_secret_key",
+    secret: SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
       sameSite: "lax",
-      // secure: true, // 如果之后上 https 可以打开
+      secure: IS_PROD, // 生产环境 https 打开
       maxAge: 1000 * 60 * 60 * 8, // 8小时
     },
   })
@@ -38,16 +44,23 @@ app.use(express.static(path.join(__dirname, "public")));
 function ensureFile(file, defaultContent) {
   if (!fs.existsSync(file)) fs.writeFileSync(file, defaultContent);
 }
+const DEFAULT_ADMIN_PASSWORD = process.env.DEFAULT_ADMIN_PASSWORD || "1025";
+if (!process.env.DEFAULT_ADMIN_PASSWORD) {
+  console.warn("⚠️ DEFAULT_ADMIN_PASSWORD not set. Using fallback for initial admin.");
+}
+
 ensureFile(
   USERS_FILE,
   JSON.stringify(
     [
-      // 默认管理员：admin / 1025
+        // 默认管理员：admin / DEFAULT_ADMIN_PASSWORD
       { 
         username: "admin", 
-        password: bcrypt.hashSync("1025", 10), 
+        password: bcrypt.hashSync(DEFAULT_ADMIN_PASSWORD, 10), 
         role: "admin",
-        group: "admin"        // ✅ 新增：给 admin 一个特殊 group
+        group: "admin",        // ✅ 新增：给 admin 一个特殊 group
+        hourlyRate: 0,
+        overtimeRate: 0
       },
     ],
     null,
@@ -66,6 +79,13 @@ const readRecords = () => JSON.parse(fs.readFileSync(RECORDS_FILE));
 const writeRecords = (r) => fs.writeFileSync(RECORDS_FILE, JSON.stringify(r, null, 2));
 const readMissed = () => JSON.parse(fs.readFileSync(MISSED_FILE));
 const writeMissed = (m) => fs.writeFileSync(MISSED_FILE, JSON.stringify(m, null, 2));
+
+function parseRate(value) {
+  if (value === undefined || value === null || value === "") return null;
+  const num = Number(value);
+  if (!Number.isFinite(num) || num < 0) return null;
+  return +num.toFixed(2);
+}
 
 function requireLogin(req, res, next) {
   if (!req.session.user) return res.status(401).json({ message: "Not logged in" });
@@ -251,6 +271,14 @@ function localDateTimeMs(ymd, hm) {
   const { h, m } = hmToParts(hm);
   return new Date(Y, M - 1, D, h, m, 0, 0).getTime(); // 本地时区
 }
+function splitRegularOvertime(payableHours, threshold = 8) {
+  const regularHours = Math.min(payableHours, threshold);
+  const overtimeHours = Math.max(0, payableHours - threshold);
+  return {
+    regularHours: +regularHours.toFixed(2),
+    overtimeHours: +overtimeHours.toFixed(2)
+  };
+}
 function computeHoursFromMissed(mp) {
   // 必填：clockIn / clockOut
   const inMs = localDateTimeMs(mp.date, mp.clockIn);
@@ -281,8 +309,16 @@ function computeHoursFromMissed(mp) {
   const lunchH = +(lunchMin / 60).toFixed(2);
   const restH = +(restMin / 60).toFixed(2);
   const payableH = +(Math.max(0, workH - lunchH)).toFixed(2);
+  const { regularHours, overtimeHours } = splitRegularOvertime(payableH);
 
-  return { workHours: workH, lunchHours: lunchH, restHours: restH, payableHours: payableH };
+  return {
+    workHours: workH,
+    lunchHours: lunchH,
+    restHours: restH,
+    payableHours: payableH,
+    regularHours,
+    overtimeHours
+  };
 }
 
 // ===== Apply approved missed punch into records.json (方案一) =====
@@ -403,6 +439,7 @@ function buildDailySummary(rows) {
     const lunchH = +(lunchMin / 60).toFixed(2);
     const restH = +(restMin / 60).toFixed(2);
     const payableH = +(Math.max(0, workH - lunchH)).toFixed(2); // 不扣 rest
+    const { regularHours, overtimeHours } = splitRegularOvertime(payableH);
 
     summaries.push({
       employee,
@@ -414,6 +451,8 @@ function buildDailySummary(rows) {
       lunchHours: lunchH,
       restHours: restH,
       payableHours: payableH,
+      regularHours,
+      overtimeHours,
     });
   }
 
@@ -442,7 +481,7 @@ function buildDailySummary(rows) {
 // 注册（创建普通员工账号）：username + password + name(真实姓名)
 // 内部 employee 唯一ID默认用 username 存（便于兼容现有逻辑）
 app.post("/api/register", async (req, res) => {
-  const { username, password, name, group } = req.body || {};
+  const { username, password, name, group, hourlyRate, overtimeRate } = req.body || {};
   if (!username || !password || !name) {
     return res.status(400).json({ message: "All fields required." });
   }
@@ -460,13 +499,27 @@ app.post("/api/register", async (req, res) => {
       ? "therapist"
       : "non-therapist"; // 前端没传或乱传就当 non-therapist
 
+      const parsedHourly = parseRate(hourlyRate);
+  const parsedOvertime = parseRate(overtimeRate);
+
+  if (parsedHourly === null) {
+    return res.status(400).json({ message: "Hourly rate must be a valid number." });
+  }
+  if (overtimeRate && parsedOvertime === null) {
+    return res.status(400).json({ message: "Overtime rate must be a valid number." });
+  }
+
+  const finalOvertime = parsedOvertime ?? +(parsedHourly * 1.5).toFixed(2);
+
   users.push({
     username,
     password: hashed,
     role: "employee",
     employee: username,   // 系统的唯一ID，用 username 充当
     name,                 // 真实姓名
-    group: normalizedGroup
+    group: normalizedGroup,
+    hourlyRate: parsedHourly,
+    overtimeRate: finalOvertime
   });
 
   writeUsers(users);
@@ -867,13 +920,15 @@ app.get("/api/summary", requireLogin, (req, res) => {
 
   // 先按 records 算每日汇总
 const daily = buildDailySummary(rec);
-const dayMap = new Map(); // date -> {workHours,lunchHours,restHours,payableHours}
+const dayMap = new Map(); // date -> {workHours,lunchHours,restHours,payableHours,regularHours,overtimeHours}
 for (const d of daily) {
   dayMap.set(d.date, {
     workHours: d.workHours,
     lunchHours: d.lunchHours,
     restHours: d.restHours,
-    payableHours: d.payableHours
+    payableHours: d.payableHours,
+    regularHours: d.regularHours,
+    overtimeHours: d.overtimeHours
   });
 }
 
@@ -889,16 +944,31 @@ for (const mp of approved) {
 
 let totalHours = 0;
 let totalBreaks = 0;
+let totalRegular = 0;
+let totalOvertime = 0;
 for (const v of dayMap.values()) {
   totalHours += v.payableHours;
   totalBreaks += (v.lunchHours + v.restHours);
+  totalRegular += v.regularHours || 0;
+  totalOvertime += v.overtimeHours || 0;
 }
+
+const users = readUsers();
+const me = users.find(x => x.username === u.username);
+const hourlyRate = Number(me?.hourlyRate || 0);
+const overtimeRate = Number(me?.overtimeRate || (hourlyRate * 1.5) || 0);
+const estimatedPay = (totalRegular * hourlyRate) + (totalOvertime * overtimeRate);
 
 res.json({
   periodStart: periodStart.toDateString(),
   periodEnd: periodEnd.toDateString(),
   totalHours: Math.max(0, Number(totalHours.toFixed(2))),
   totalBreaks: Math.max(0, Number(totalBreaks.toFixed(2))),
+  regularHours: Math.max(0, Number(totalRegular.toFixed(2))),
+  overtimeHours: Math.max(0, Number(totalOvertime.toFixed(2))),
+  hourlyRate: +hourlyRate.toFixed(2),
+  overtimeRate: +overtimeRate.toFixed(2),
+  estimatedPay: Math.max(0, Number(estimatedPay.toFixed(2)))
 });
 }); // ✅ <—— 这一行必须加，结束 /api/summary
 
@@ -1048,6 +1118,11 @@ const summary2 = Array.from(sumMap.values())
     { header: "Lunch Hours",      key: "lunchHours",     width: 12 },
     { header: "Rest Hours",       key: "restHours",      width: 12 },
     { header: "Payable Hours",    key: "payableHours",   width: 14 },
+    { header: "Regular Hours",    key: "regularHours",   width: 14 },
+    { header: "Overtime Hours",   key: "overtimeHours",  width: 15 },
+    { header: "Hourly Rate",      key: "hourlyRate",     width: 12 },
+    { header: "OT Rate",          key: "overtimeRate",   width: 10 },
+    { header: "Est Pay",          key: "estimatedPay",   width: 12 },
   ];
 
   // 按员工分区
@@ -1056,6 +1131,9 @@ summary2.forEach(r => {
     if (!byEmp.has(r.employee)) byEmp.set(r.employee, []);
     byEmp.get(r.employee).push(r);
   });
+  const userMap = new Map(
+    readUsers().map(u => [u.employee || u.username, u])
+  );
 
   for (const emp of Array.from(byEmp.keys()).sort()) {
     const rows = byEmp.get(emp);
@@ -1067,15 +1145,23 @@ summary2.forEach(r => {
     titleRow.getCell(1).value = `Employee: ${empName} (${emp})`;
     styleSectionTitle(titleRow);
     titleRow.commit();
-    ws.mergeCells(titleRowIdx, 1, titleRowIdx, 10);
+    ws.mergeCells(titleRowIdx, 1, titleRowIdx, 15);
 
     // 表头（只给已用 7 列上色）
     const headerRow = ws.addRow(ws.columns.map(c => c.header));
     styleHeader(headerRow);
 
     // 数据行 + 小计
+    const userInfo = userMap.get(emp) || {};
+    const hourlyRate = Number(userInfo.hourlyRate || 0);
+    const overtimeRate = Number(userInfo.overtimeRate || (hourlyRate * 1.5) || 0);
+
     let sumWork = 0, sumLunch = 0, sumRest = 0, sumPay = 0;
+    let sumRegular = 0, sumOvertime = 0, sumEstPay = 0;
     rows.forEach(r => {
+      const rowRegular = Number(r.regularHours || 0);
+      const rowOvertime = Number(r.overtimeHours || 0);
+      const rowEstPay = +(rowRegular * hourlyRate + rowOvertime * overtimeRate).toFixed(2);
       const dataRow = ws.addRow([
         r.date,
         r.firstIn,
@@ -1086,13 +1172,21 @@ summary2.forEach(r => {
         r.workHours,
         r.lunchHours,
         r.restHours,
-        r.payableHours
+        r.payableHours,
+        rowRegular,
+        rowOvertime,
+        hourlyRate,
+        overtimeRate,
+        rowEstPay
       ]);
       styleBody(dataRow);
       sumWork  += r.workHours;
       sumLunch += r.lunchHours;
       sumRest  += r.restHours;
       sumPay   += r.payableHours;
+      sumRegular += rowRegular;
+      sumOvertime += rowOvertime;
+      sumEstPay += rowEstPay;
     });
 
     // 小计行：加粗、淡灰底、四边框
@@ -1101,7 +1195,12 @@ summary2.forEach(r => {
       +sumWork.toFixed(2),
       +sumLunch.toFixed(2),
       +sumRest.toFixed(2),
-      +sumPay.toFixed(2)
+      +sumPay.toFixed(2),
+      +sumRegular.toFixed(2),
+      +sumOvertime.toFixed(2),
+      hourlyRate,
+      overtimeRate,
+      +sumEstPay.toFixed(2)
     ]);
     subtotal.font = { bold: true, color: { argb: "FF0F172A" } };
     subtotal.eachCell(c => {
@@ -1115,7 +1214,7 @@ summary2.forEach(r => {
     });
 
     // 分隔空白行
-    const spacer = ws.addRow(["","","","","","","","","",""]);
+    const spacer = ws.addRow(["","","","","","","","","","","","","","",""]);
     spacer.height = 6;
   } // ← 别漏这个大括号（关闭 for 循环）
 
