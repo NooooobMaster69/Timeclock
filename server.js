@@ -113,7 +113,7 @@ ensureFile(
       // 默认管理员：admin / 1025
       { 
         username: "admin", 
-        password: bcrypt.hashSync("1025", 10), 
+        password: bcrypt.hashSync("1021", 10), 
         role: "admin",
         group: "admin"        // ✅ 新增：给 admin 一个特殊 group
       },
