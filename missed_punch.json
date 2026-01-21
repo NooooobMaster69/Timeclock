@@ -325,5 +325,106 @@
     "decisionNote": "",
     "cancelledAt": "2026-01-17T02:13:15.563Z",
     "cancelledBy": "lqs005"
+  },
+  {
+    "id": "mkmxpwln_1rhvd2",
+    "employee": "Test1",
+    "date": "2026-01-14",
+    "clockIn": "01:58",
+    "clockOut": "15:02",
+    "mealIn": "04:04",
+    "mealOut": "04:04",
+    "restIn": "04:04",
+    "restOut": "04:04",
+    "note": "",
+    "status": "denied",
+    "submittedAt": "2026-01-20T18:35:48.683Z",
+    "reviewedAt": "2026-01-20T18:41:41.520Z",
+    "reviewedBy": "admin",
+    "decisionNote": ""
+  },
+  {
+    "id": "mkn015hb_zxmbam",
+    "employee": "Test1",
+    "date": "2026-01-14",
+    "clockIn": "08:58",
+    "clockOut": "17:59",
+    "mealIn": "12:00",
+    "mealOut": "13:00",
+    "restIn": "09:00",
+    "restOut": "10:00",
+    "note": "",
+    "status": "approved",
+    "submittedAt": "2026-01-20T19:40:32.640Z",
+    "reviewedAt": "2026-01-20T19:40:47.063Z",
+    "reviewedBy": "admin",
+    "decisionNote": "",
+    "applied": {
+      "appliedAt": "2026-01-20T19:40:47.063Z",
+      "appliedBy": "admin",
+      "hours": {
+        "workHours": 9.02,
+        "lunchHours": 1,
+        "restHours": 1,
+        "payableHours": 8.02
+      },
+      "removedRecords": [
+        {
+          "employee": "Test1",
+          "type": "CLOCK_IN",
+          "timestamp": "2026-01-15T00:58:26.289Z"
+        }
+      ],
+      "insertedRecords": [
+        {
+          "employee": "Test1",
+          "type": "CLOCK_IN",
+          "timestamp": "2026-01-14T16:58:00.000Z",
+          "source": "MISSED_PUNCH",
+          "requestId": "mkn015hb_zxmbam",
+          "createdAt": "2026-01-20T19:40:47.061Z"
+        },
+        {
+          "employee": "Test1",
+          "type": "CLOCK_OUT",
+          "timestamp": "2026-01-15T01:59:00.000Z",
+          "source": "MISSED_PUNCH",
+          "requestId": "mkn015hb_zxmbam",
+          "createdAt": "2026-01-20T19:40:47.061Z"
+        },
+        {
+          "employee": "Test1",
+          "type": "MEAL_IN",
+          "timestamp": "2026-01-14T20:00:00.000Z",
+          "source": "MISSED_PUNCH",
+          "requestId": "mkn015hb_zxmbam",
+          "createdAt": "2026-01-20T19:40:47.061Z"
+        },
+        {
+          "employee": "Test1",
+          "type": "MEAL_OUT",
+          "timestamp": "2026-01-14T21:00:00.000Z",
+          "source": "MISSED_PUNCH",
+          "requestId": "mkn015hb_zxmbam",
+          "createdAt": "2026-01-20T19:40:47.061Z"
+        },
+        {
+          "employee": "Test1",
+          "type": "REST_IN",
+          "timestamp": "2026-01-14T17:00:00.000Z",
+          "source": "MISSED_PUNCH",
+          "requestId": "mkn015hb_zxmbam",
+          "createdAt": "2026-01-20T19:40:47.061Z"
+        },
+        {
+          "employee": "Test1",
+          "type": "REST_OUT",
+          "timestamp": "2026-01-14T18:00:00.000Z",
+          "source": "MISSED_PUNCH",
+          "requestId": "mkn015hb_zxmbam",
+          "createdAt": "2026-01-20T19:40:47.061Z"
+        }
+      ]
+    }
   }
 ]
