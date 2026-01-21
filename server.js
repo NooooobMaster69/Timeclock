@@ -1023,15 +1023,27 @@ res.json({
 
 // 导出：员工导出自己的“每日汇总”；管理员导出“所有员工每日汇总”（并附原始记录工作表）
 app.get("/api/export", requireLogin, async (req, res) => {
-  const { employee, range = "all", start, end } = req.query || {};
+  const { employee, range = "all", start, end, group } = req.query || {};
   const u = req.session.user;
   const all = readRecords();
+  const users = readUsers();
+  const groupMap = new Map(
+    users.map((user) => [user.employee || user.username, user.group || "non-therapist"])
+  );
+  const normalizedGroup =
+    group === "therapist" || group === "non-therapist" ? group : "";
 
 
   // 范围：管理员=全部或指定 employee；员工=本人
   let dataset = [];
   if (u.role === "admin") {
     dataset = employee ? all.filter(r => r.employee === employee) : all;
+    if (normalizedGroup) {
+      dataset = dataset.filter((r) => {
+        const empGroup = groupMap.get(r.employee) || "non-therapist";
+        return empGroup === normalizedGroup;
+      });
+    }
   } else {
     dataset = all.filter(r => r.employee === u.employee);
   }

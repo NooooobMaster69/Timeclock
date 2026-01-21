@@ -250,12 +250,30 @@ async function setupAdminZone(role) {
   adminZone.style.display = "block";
 
   const select = document.getElementById("adminEmployeeSelect");
+  const groupSelect = document.getElementById("adminGroupSelect");
   if (!select) return;
+
+  const syncAdminFilters = (source) => {
+    if (!groupSelect) return;
+    const hasEmployee = !!select.value;
+    const hasGroup = !!groupSelect.value;
+
+    if (source === "employee" && hasEmployee) {
+      groupSelect.value = "";
+    }
+    if (source === "group" && hasGroup) {
+      select.value = "";
+    }
+
+    groupSelect.disabled = !!select.value;
+    select.disabled = !!groupSelect.value;
+  };
 
   // 已加载过员工列表：只刷新 pending
   // ✅ 永远确保绑定 change（防止某些情况下没绑上）
 if (!select.dataset.mpBound) {
   select.addEventListener("change", async () => {
+    syncAdminFilters("employee");
     try {
       await loadAdminPendingMissedPunch();
     } catch (e) {
@@ -266,9 +284,23 @@ if (!select.dataset.mpBound) {
   select.dataset.mpBound = "1";
 }
 
+if (groupSelect && !groupSelect.dataset.bound) {
+  groupSelect.addEventListener("change", async () => {
+    syncAdminFilters("group");
+    try {
+      await loadAdminPendingMissedPunch();
+    } catch (e) {
+      console.error(e);
+      toast("Failed to refresh pending list: " + (e?.message || e));
+    }
+  });
+  groupSelect.dataset.bound = "1";
+  }
+
 
 // 已加载过员工列表：只刷新 pending
 if (select.dataset.loaded === "1") {
+  syncAdminFilters();
   await loadAdminPendingMissedPunch();
   return;
 }
@@ -289,6 +321,7 @@ if (select.dataset.loaded === "1") {
     });
 
     select.dataset.loaded = "1";
+    syncAdminFilters();
 
     // 绑定一次 change -> 刷新 pending
     if (!select.dataset.mpBound) {
@@ -1104,34 +1137,40 @@ function exportMyCustom() {
   window.location.href = `/api/export?${params.toString()}`;
 }
 
+function getAdminExportFilters() {
+  const sel = document.getElementById("adminEmployeeSelect");
+  const groupSel = document.getElementById("adminGroupSelect");
+  return {
+    employee: sel?.value || "",
+    group: groupSel?.value || ""
+  };
+}
 
 function adminExportCurrent() {
   // 管理员导出“当前周期”的记录（可选指定某个员工）
-  const sel = document.getElementById("adminEmployeeSelect");
   const params = new URLSearchParams();
-  if (sel && sel.value) {
-    params.set("employee", sel.value);
-  }
+  const { employee, group } = getAdminExportFilters();
+  if (employee) params.set("employee", employee);
+  if (group) params.set("group", group);
   params.set("range", "current");
   window.location.href = `/api/export?${params.toString()}`;
 }
 
 function adminExportAll() {
   // 管理员导出所有周期的记录（可选指定某个员工）
-  const sel = document.getElementById("adminEmployeeSelect");
   const params = new URLSearchParams();
-  if (sel && sel.value) {
-    params.set("employee", sel.value);
-  }
+  const { employee, group } = getAdminExportFilters();
+  if (employee) params.set("employee", employee);
+  if (group) params.set("group", group);
   params.set("range", "all");
   const qs = params.toString();
   window.location.href = qs ? `/api/export?${qs}` : `/api/export`;
 }
 
 function adminExportCustom() {
-  const sel   = document.getElementById("adminEmployeeSelect");
   const start = document.getElementById("adminRangeStart")?.value;
   const end   = document.getElementById("adminRangeEnd")?.value;
+  const { employee, group } = getAdminExportFilters();
 
   if (!start || !end) {
     return toast("Please choose both start and end dates.");
@@ -1141,9 +1180,8 @@ function adminExportCustom() {
   }
 
   const params = new URLSearchParams();
-  if (sel && sel.value) {
-    params.set("employee", sel.value); // 可以指定某个人
-  }
+  if (employee) params.set("employee", employee); // 可以指定某个人
+  if (group) params.set("group", group);
   params.set("range", "custom");
   params.set("start", start);
   params.set("end", end);
