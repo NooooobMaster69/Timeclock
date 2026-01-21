@@ -136,6 +136,26 @@
         <option value="therapist">Therapist</option>
       </select>
       
+      <label for="hourlyRate">Hourly Rate ($)</label>
+      <input
+        id="hourlyRate"
+        name="hourlyRate"
+        type="number"
+        min="0"
+        step="0.01"
+        placeholder="e.g., 45.00"
+        required
+      />
+
+      <label for="overtimeRate">Overtime Rate ($) <span style="color:#94a3b8;">(optional)</span></label>
+      <input
+        id="overtimeRate"
+        name="overtimeRate"
+        type="number"
+        min="0"
+        step="0.01"
+        placeholder="Default is 1.5x"
+      />
       <label for="password">Password</label>
       <input
         id="password"
@@ -167,8 +187,10 @@
         const name     = document.getElementById('name').value.trim();
         const password = document.getElementById('password').value.trim();
         const group    = document.getElementById('group').value || 'non-therapist';
+        const hourlyRate = document.getElementById('hourlyRate').value;
+        const overtimeRate = document.getElementById('overtimeRate').value;
 
-        if (!username || !password || !name) {
+        if (!username || !password || !name || hourlyRate === '') {
           alert('All fields are required.');
           return;
         }
@@ -176,7 +198,7 @@
           const res = await fetch('/api/register', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password, name, group })
+            body: JSON.stringify({ username, password, name, group, hourlyRate, overtimeRate })
           });
 
           const data = await res.json();
