@@ -7,6 +7,16 @@ const ExcelJS = require("exceljs");
 
 const app = express();
 const PORT = 3000;
+const IS_PROD = process.env.NODE_ENV === "production";
+
+// ---- Security Config ----
+const SESSION_SECRET = process.env.SESSION_SECRET || "DEV_INSECURE_CHANGE_ME";
+if (!process.env.SESSION_SECRET) {
+  console.warn("⚠️ SESSION_SECRET is not set. Using a default dev secret.");
+}
+
+// Trust proxy when behind a load balancer (required for secure cookies)
+app.set("trust proxy", 1);
 
 // ---- Files ----
 const USERS_FILE = path.join(__dirname, "users.json");
@@ -14,18 +24,76 @@ const RECORDS_FILE = path.join(__dirname, "records.json");
 const MISSED_FILE = path.join(__dirname, "missed_punch.json");
 
 // ---- Middleware ----
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: "100kb" }));
+app.use(express.urlencoded({ extended: true, limit: "100kb" }));
+
+// Basic security headers (lightweight replacement for helmet)
+app.use((req, res, next) => {
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("X-Frame-Options", "DENY");
+  res.setHeader("Referrer-Policy", "no-referrer");
+  res.setHeader("Permissions-Policy", "geolocation=(), microphone=(), camera=()");
+  res.setHeader("Cross-Origin-Resource-Policy", "same-site");
+  res.setHeader("X-XSS-Protection", "0");
+  next();
+});
+
+// Simple in-memory rate limiter
+function createRateLimiter({ windowMs, max, keyFn, name }) {
+  const hits = new Map(); // key -> { count, resetAt }
+  const cleanupInterval = Math.max(30_000, Math.min(windowMs, 5 * 60_000));
+
+  setInterval(() => {
+    const now = Date.now();
+    for (const [key, entry] of hits.entries()) {
+      if (entry.resetAt <= now) hits.delete(key);
+    }
+  }, cleanupInterval).unref();
+
+  return (req, res, next) => {
+    const key = keyFn ? keyFn(req) : req.ip;
+    const now = Date.now();
+    const entry = hits.get(key);
+    if (!entry || entry.resetAt <= now) {
+      hits.set(key, { count: 1, resetAt: now + windowMs });
+      return next();
+    }
+    if (entry.count >= max) {
+      res.setHeader("Retry-After", Math.ceil((entry.resetAt - now) / 1000));
+      return res.status(429).json({ message: `${name || "Rate limit"} exceeded. Try again later.` });
+    }
+    entry.count += 1;
+    return next();
+  };
+}
+
+const loginLimiter = createRateLimiter({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  name: "Login",
+  keyFn: (req) => `${req.ip}:${String(req.body?.username || "")}`.toLowerCase(),
+});
+const registerLimiter = createRateLimiter({
+  windowMs: 60 * 60 * 1000,
+  max: 10,
+  name: "Register",
+});
+const writeLimiter = createRateLimiter({
+  windowMs: 60 * 1000,
+  max: 60,
+  name: "Write",
+});
 
 app.use(
   session({
-    secret: "360WPT_secret_key",
+      name: "timeclock.sid",
+    secret: SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
       sameSite: "lax",
-      // secure: true, // 如果之后上 https 可以打开
+      secure: IS_PROD,
       maxAge: 1000 * 60 * 60 * 8, // 8小时
     },
   })
@@ -441,7 +509,7 @@ function buildDailySummary(rows) {
 // 根路径：按是否登录返回页面
 // 注册（创建普通员工账号）：username + password + name(真实姓名)
 // 内部 employee 唯一ID默认用 username 存（便于兼容现有逻辑）
-app.post("/api/register", async (req, res) => {
+app.post("/api/register", registerLimiter, async (req, res) => {
   const { username, password, name, group } = req.body || {};
   if (!username || !password || !name) {
     return res.status(400).json({ message: "All fields required." });
@@ -476,7 +544,7 @@ app.post("/api/register", async (req, res) => {
 
 
 // 登录
-app.post("/api/login", async (req, res) => {
+app.post("/api/login", loginLimiter, async (req, res) => {
   const { username, password } = req.body || {};
   const users = readUsers();
   const user = users.find((u) => u.username === username);
@@ -568,7 +636,7 @@ app.get("/api/records", requireLogin, (req, res) => {
 });
 
 // 记一条打卡记录（基于当前状态校验序列合法）
-app.post("/api/record", requireLogin, (req, res) => {
+app.post("/api/record", requireLogin, writeLimiter, (req, res) => {
   const { type } = req.body || {};
   const u = req.session.user;
 
@@ -661,7 +729,7 @@ function requireAdmin(req, res, next) {
 }
 
 // 员工提交 Missed Punch Request
-app.post("/api/missed_punch", requireLogin, (req, res) => {
+app.post("/api/missed_punch", requireLogin, writeLimiter, (req, res) => {
   const u = req.session.user;
   if (u.role !== "employee") return res.status(403).json({ message: "Forbidden" });
 
@@ -780,7 +848,7 @@ app.get("/api/missed_punch", requireLogin, (req, res) => {
 });
 
 // 员工撤销 Missed Punch（仅 pending 可撤销）
-app.post("/api/missed_punch/:id/cancel", requireLogin, (req, res) => {
+app.post("/api/missed_punch/:id/cancel", requireLogin, writeLimiter, (req, res) => {
   const u = req.session.user;
   if (u.role !== "employee") return res.status(403).json({ message: "Forbidden" });
 
@@ -808,7 +876,7 @@ app.post("/api/missed_punch/:id/cancel", requireLogin, (req, res) => {
 
 
 // 管理员审批/拒绝
-app.post("/api/missed_punch/:id/review", requireLogin, requireAdmin, (req, res) => {
+app.post("/api/missed_punch/:id/review", requireLogin, requireAdmin, writeLimiter, (req, res) => {
   const { id } = req.params;
   const { action, note } = req.body || {};
   if (action !== "approve" && action !== "deny") {
