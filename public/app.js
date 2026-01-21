@@ -95,8 +95,6 @@ async function register() {
   const name     = $("#name")?.value.trim();
   const password = $("#password")?.value.trim();
   const groupEl  = $("#group");
-  const hourlyRate = $("#hourlyRate")?.value;
-  const overtimeRate = $("#overtimeRate")?.value;
   const rawGroup = groupEl ? groupEl.value : "non-therapist";
 
   // 规范成后端认识的两种：therapist / non-therapist
@@ -105,7 +103,7 @@ async function register() {
       ? "therapist"
       : "non-therapist";
 
- if (!username || !password || !name || hourlyRate === "" || hourlyRate == null) {
+  if (!username || !password || !name) {
     toast("All fields are required.");
     return;
   }
@@ -113,7 +111,7 @@ async function register() {
   try {
     await api("/api/register", {
       method: "POST",
-      json: { username, password, name, group, hourlyRate, overtimeRate }
+      json: { username, password, name, group }
     });
     toast("✅ Registration successful! Please login.");
     window.location.href = "login.html";
@@ -130,7 +128,7 @@ function bindRegisterPage() {
     btn.addEventListener("click", register);
   }
 
-["#username", "#name", "#password", "#group", "#hourlyRate", "#overtimeRate"].forEach((sel) => {
+  ["#username", "#name", "#password", "#group"].forEach((sel) => {
     const el = $(sel);
     if (el) el.addEventListener("keydown", (e) => {
       if (e.key === "Enter") register();
@@ -1069,23 +1067,13 @@ async function loadRecords() {
 }
 
 async function viewSummaryClient() {
-  try {
-    const sum = await api("/api/summary");
-    toast(
-      `Pay Period: ${sum.periodStart} – ${sum.periodEnd}\n` +
-      `Total Work Hours: ${sum.totalHours} hrs\n` +
-      `Regular: ${sum.regularHours} hrs | Overtime: ${sum.overtimeHours} hrs\n` +
-      `Estimated Pay: $${sum.estimatedPay}`
-    );
-  } catch (e) {
-    const rec = await loadRecords();
-    const sum = computeSummaryClient(rec);
-    toast(
-      `Pay Period: ${sum.periodStart} – ${sum.periodEnd}\n` +
-      `Total Work Hours: ${sum.totalHours} hrs\n` +
-      `Total Breaks: ${sum.totalBreaks} hrs`
-    );
-  }
+  const rec = await loadRecords();
+  const sum = computeSummaryClient(rec);
+  toast(
+    `Pay Period: ${sum.periodStart} – ${sum.periodEnd}\n` +
+    `Total Work Hours: ${sum.totalHours} hrs\n` +
+    `Total Breaks: ${sum.totalBreaks} hrs`
+  );
 }
 function exportCurrentMine() {
   // 导出当前双周周期（员工自己的）
