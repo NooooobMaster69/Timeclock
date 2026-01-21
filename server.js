@@ -12,6 +12,9 @@ const IS_PROD = process.env.NODE_ENV === "production";
 // ---- Security Config ----
 const SESSION_SECRET = process.env.SESSION_SECRET || "DEV_INSECURE_CHANGE_ME";
 if (!process.env.SESSION_SECRET) {
+  if (IS_PROD) {
+    throw new Error("SESSION_SECRET must be set in production.");
+  }
   console.warn("⚠️ SESSION_SECRET is not set. Using a default dev secret.");
 }
 
@@ -26,6 +29,7 @@ const MISSED_FILE = path.join(__dirname, "missed_punch.json");
 // ---- Middleware ----
 app.use(express.json({ limit: "100kb" }));
 app.use(express.urlencoded({ extended: true, limit: "100kb" }));
+app.disable("x-powered-by");
 
 // Basic security headers (lightweight replacement for helmet)
 app.use((req, res, next) => {
@@ -135,6 +139,34 @@ const writeRecords = (r) => fs.writeFileSync(RECORDS_FILE, JSON.stringify(r, nul
 const readMissed = () => JSON.parse(fs.readFileSync(MISSED_FILE));
 const writeMissed = (m) => fs.writeFileSync(MISSED_FILE, JSON.stringify(m, null, 2));
 
+const MAX_USERNAME_LEN = 48;
+const MAX_NAME_LEN = 80;
+const MAX_PASSWORD_LEN = 128;
+
+function normalizeUsername(input) {
+  return String(input || "").trim();
+}
+
+function normalizeName(input) {
+  return String(input || "").trim();
+}
+
+function isValidUsername(username) {
+  return (
+    username.length >= 3 &&
+    username.length <= MAX_USERNAME_LEN &&
+    /^[a-zA-Z0-9._-]+$/.test(username)
+  );
+}
+
+function isValidName(name) {
+  return name.length >= 1 && name.length <= MAX_NAME_LEN;
+}
+
+function isValidPassword(password) {
+  return password.length >= 8 && password.length <= MAX_PASSWORD_LEN;
+}
+
 function requireLogin(req, res, next) {
   if (!req.session.user) return res.status(401).json({ message: "Not logged in" });
   next();
@@ -242,6 +274,13 @@ function nameOf(employee) {
     (x) => x.employee === employee || x.username === employee
   );
   return (u && (u.name || u.username)) || employee;
+}
+
+function groupOf(employee, users) {
+  const u = users.find(
+    (x) => x.employee === employee || x.username === employee
+  );
+  return u?.group || "non-therapist";
 }
 
 // 柔蓝表头 + 边框美化
@@ -511,12 +550,24 @@ function buildDailySummary(rows) {
 // 内部 employee 唯一ID默认用 username 存（便于兼容现有逻辑）
 app.post("/api/register", registerLimiter, async (req, res) => {
   const { username, password, name, group } = req.body || {};
-  if (!username || !password || !name) {
+  const normalizedUsername = normalizeUsername(username);
+  const normalizedName = normalizeName(name);
+
+  if (!normalizedUsername || !password || !normalizedName) {
     return res.status(400).json({ message: "All fields required." });
+  }
+  if (!isValidUsername(normalizedUsername)) {
+    return res.status(400).json({ message: "Username must be 3-48 chars, letters/numbers/._- only." });
+  }
+  if (!isValidName(normalizedName)) {
+    return res.status(400).json({ message: "Name is too long." });
+  }
+  if (!isValidPassword(password)) {
+    return res.status(400).json({ message: "Password must be 8-128 characters." });
   }
 
   const users = readUsers();
-  if (users.find((u) => u.username === username)) {
+  if (users.find((u) => u.username === normalizedUsername)) {
     return res.status(400).json({ message: "Username already exists." });
   }
 
@@ -529,11 +580,11 @@ app.post("/api/register", registerLimiter, async (req, res) => {
       : "non-therapist"; // 前端没传或乱传就当 non-therapist
 
   users.push({
-    username,
+    username: normalizedUsername,
     password: hashed,
     role: "employee",
-    employee: username,   // 系统的唯一ID，用 username 充当
-    name,                 // 真实姓名
+    employee: normalizedUsername,   // 系统的唯一ID，用 username 充当
+    name: normalizedName,           // 真实姓名
     group: normalizedGroup
   });
 
@@ -546,8 +597,15 @@ app.post("/api/register", registerLimiter, async (req, res) => {
 // 登录
 app.post("/api/login", loginLimiter, async (req, res) => {
   const { username, password } = req.body || {};
+  const normalizedUsername = normalizeUsername(username);
+  if (!normalizedUsername || !password) {
+    return res.status(400).json({ message: "Username and password required." });
+  }
+  if (!isValidUsername(normalizedUsername) || password.length > MAX_PASSWORD_LEN) {
+    return res.status(400).json({ message: "Invalid credentials." });
+  }
   const users = readUsers();
-  const user = users.find((u) => u.username === username);
+  const user = users.find((u) => u.username === normalizedUsername);
   if (!user) return res.status(401).json({ message: "Invalid credentials" });
 
   const ok = await bcrypt.compare(password, user.password);
@@ -1103,6 +1161,8 @@ const summary2 = Array.from(sumMap.values())
   // ===== Excel（Summary + Records）=====
   const wb = new ExcelJS.Workbook();
 
+  const users = readUsers();
+
   // Summary
   const ws = wb.addWorksheet("Summary", { properties: { defaultRowHeight: 18 } });
   ws.columns = [
@@ -1118,73 +1178,96 @@ const summary2 = Array.from(sumMap.values())
     { header: "Payable Hours",    key: "payableHours",   width: 14 },
   ];
 
-  // 按员工分区
-  const byEmp = new Map();
-summary2.forEach(r => {
-    if (!byEmp.has(r.employee)) byEmp.set(r.employee, []);
-    byEmp.get(r.employee).push(r);
+  // 按 group -> employee 分区
+  const byGroup = new Map();
+  summary2.forEach((row) => {
+    const group = groupOf(row.employee, users);
+    if (!byGroup.has(group)) byGroup.set(group, new Map());
+    const groupMap = byGroup.get(group);
+    if (!groupMap.has(row.employee)) groupMap.set(row.employee, []);
+    groupMap.get(row.employee).push(row);
   });
 
-  for (const emp of Array.from(byEmp.keys()).sort()) {
-    const rows = byEmp.get(emp);
-    const empName = nameOf(emp);
+  const groupOrder = ["therapist", "non-therapist"];
+  const groupKeys = Array.from(byGroup.keys()).sort((a, b) => {
+    const ai = groupOrder.indexOf(a);
+    const bi = groupOrder.indexOf(b);
+    if (ai !== -1 || bi !== -1) {
+      return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+    }
+    return String(a).localeCompare(String(b));
+  });
 
-    // 区块标题（姓名 + 内部ID）
-    const titleRowIdx = ws.lastRow ? ws.lastRow.number + 2 : 1;
-    const titleRow = ws.getRow(titleRowIdx);
-    titleRow.getCell(1).value = `Employee: ${empName} (${emp})`;
-    styleSectionTitle(titleRow);
-    titleRow.commit();
-    ws.mergeCells(titleRowIdx, 1, titleRowIdx, 10);
+  for (const group of groupKeys) {
+    const groupTitleIdx = ws.lastRow ? ws.lastRow.number + 2 : 1;
+    const groupTitleRow = ws.getRow(groupTitleIdx);
+    groupTitleRow.getCell(1).value = `Group: ${group}`;
+    styleSectionTitle(groupTitleRow);
+    groupTitleRow.commit();
+    ws.mergeCells(groupTitleIdx, 1, groupTitleIdx, 10);
 
-    // 表头（只给已用 7 列上色）
-    const headerRow = ws.addRow(ws.columns.map(c => c.header));
-    styleHeader(headerRow);
+    const byEmp = byGroup.get(group);
+    for (const emp of Array.from(byEmp.keys()).sort()) {
+      const rows = byEmp.get(emp);
+      const empName = nameOf(emp);
 
-    // 数据行 + 小计
-    let sumWork = 0, sumLunch = 0, sumRest = 0, sumPay = 0;
-    rows.forEach(r => {
-      const dataRow = ws.addRow([
-        r.date,
-        r.firstIn,
-        r.lastOut,
-        r.mpStatus || "",
-        r.mpReviewedBy || "",
-        r.mpDecisionNote || "",
-        r.workHours,
-        r.lunchHours,
-        r.restHours,
-        r.payableHours
+      // 区块标题（姓名 + 内部ID）
+      const titleRowIdx = ws.lastRow ? ws.lastRow.number + 2 : 1;
+      const titleRow = ws.getRow(titleRowIdx);
+      titleRow.getCell(1).value = `Employee: ${empName} (${emp})`;
+      styleSectionTitle(titleRow);
+      titleRow.commit();
+      ws.mergeCells(titleRowIdx, 1, titleRowIdx, 10);
+
+      // 表头（只给已用 7 列上色）
+      const headerRow = ws.addRow(ws.columns.map(c => c.header));
+      styleHeader(headerRow);
+
+      // 数据行 + 小计
+      let sumWork = 0, sumLunch = 0, sumRest = 0, sumPay = 0;
+      rows.forEach(r => {
+        const dataRow = ws.addRow([
+          r.date,
+          r.firstIn,
+          r.lastOut,
+          r.mpStatus || "",
+          r.mpReviewedBy || "",
+          r.mpDecisionNote || "",
+          r.workHours,
+          r.lunchHours,
+          r.restHours,
+          r.payableHours
+        ]);
+        styleBody(dataRow);
+        sumWork  += r.workHours;
+        sumLunch += r.lunchHours;
+        sumRest  += r.restHours;
+        sumPay   += r.payableHours;
+      });
+
+      // 小计行：加粗、淡灰底、四边框
+      const subtotal = ws.addRow([
+          "", "", "Subtotal", "", "", "",
+        +sumWork.toFixed(2),
+        +sumLunch.toFixed(2),
+        +sumRest.toFixed(2),
+        +sumPay.toFixed(2)
       ]);
-      styleBody(dataRow);
-      sumWork  += r.workHours;
-      sumLunch += r.lunchHours;
-      sumRest  += r.restHours;
-      sumPay   += r.payableHours;
-    });
+      subtotal.font = { bold: true, color: { argb: "FF0F172A" } };
+      subtotal.eachCell(c => {
+        c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF8FAFC" } };
+        c.border = {
+          top:    { style: "thin", color: { argb: "FFCBD5E1" } },
+          bottom: { style: "thin", color: { argb: "FFCBD5E1" } },
+          left:   { style: "thin", color: { argb: "FFCBD5E1" } },
+          right:  { style: "thin", color: { argb: "FFCBD5E1" } },
+        };
+      });
 
-    // 小计行：加粗、淡灰底、四边框
-    const subtotal = ws.addRow([
-        "", "", "Subtotal", "", "", "",
-      +sumWork.toFixed(2),
-      +sumLunch.toFixed(2),
-      +sumRest.toFixed(2),
-      +sumPay.toFixed(2)
-    ]);
-    subtotal.font = { bold: true, color: { argb: "FF0F172A" } };
-    subtotal.eachCell(c => {
-      c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF8FAFC" } };
-      c.border = {
-        top:    { style: "thin", color: { argb: "FFCBD5E1" } },
-        bottom: { style: "thin", color: { argb: "FFCBD5E1" } },
-        left:   { style: "thin", color: { argb: "FFCBD5E1" } },
-        right:  { style: "thin", color: { argb: "FFCBD5E1" } },
-      };
-    });
-
-    // 分隔空白行
-    const spacer = ws.addRow(["","","","","","","","","",""]);
-    spacer.height = 6;
+      // 分隔空白行
+      const spacer = ws.addRow(["","","","","","","","","",""]);
+      spacer.height = 6;
+    }
   } // ← 别漏这个大括号（关闭 for 循环）
 
   // Records 明细（循环外）
@@ -1192,6 +1275,7 @@ summary2.forEach(r => {
   ws2.columns = [
     { header: "Name",        key: "name",      width: 18 },
     { header: "Employee ID", key: "employee",  width: 16 },
+    { header: "Group",       key: "group",     width: 14 },
     { header: "Type",        key: "type",      width: 14 },
     { header: "Timestamp",   key: "timestamp", width: 26 },
     { header: "Local Date",  key: "date",      width: 12 },
@@ -1207,6 +1291,7 @@ summary2.forEach(r => {
       const row = ws2.addRow([
         nameOf(r.employee),
         r.employee || "",
+        groupOf(r.employee, users),
         r.type,
         r.timestamp,
         localYMD(r.timestamp),
