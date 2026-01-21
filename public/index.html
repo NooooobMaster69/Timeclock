@@ -805,11 +805,24 @@ padding: 12px 22px;
   <div id="adminZone">
     <h3>👑 Admin Zone</h3>
 
-    <div style="margin-bottom:8px;">
-      <label for="adminEmployeeSelect" style="margin-right:4px;">Employee:</label>
-      <select id="adminEmployeeSelect" style="padding:4px 6px; border-radius:6px; border:1px solid #cbd5e1;">
-        <option value="">All employees</option>
-      </select>
+    <div style="margin-bottom:8px; display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end;">
+      <div>
+        <label for="adminEmployeeSelect" style="margin-right:4px;">Employee:</label>
+        <select id="adminEmployeeSelect" style="padding:4px 6px; border-radius:6px; border:1px solid #cbd5e1;">
+          <option value="">All employees</option>
+        </select>
+      </div>
+      <div>
+        <label for="adminGroupSelect" style="margin-right:4px;">Group:</label>
+        <select id="adminGroupSelect" style="padding:4px 6px; border-radius:6px; border:1px solid #cbd5e1;">
+          <option value="">All groups</option>
+          <option value="therapist">Therapist</option>
+          <option value="non-therapist">Non-therapist</option>
+        </select>
+      </div>
+      <div id="adminFilterHint" style="font-size:12px; color:#64748b;">
+        Choose either Employee or Group.
+      </div>
     </div>
 
     <div class="summary-buttons" style="margin-bottom: 6px;">
