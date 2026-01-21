@@ -12,6 +12,9 @@ const IS_PROD = process.env.NODE_ENV === "production";
 // ---- Security Config ----
 const SESSION_SECRET = process.env.SESSION_SECRET || "DEV_INSECURE_CHANGE_ME";
 if (!process.env.SESSION_SECRET) {
+    if (IS_PROD) {
+    throw new Error("SESSION_SECRET must be set in production.");
+  }
   console.warn("⚠️ SESSION_SECRET is not set. Using a default dev secret.");
 }
 
@@ -26,6 +29,7 @@ const MISSED_FILE = path.join(__dirname, "missed_punch.json");
 // ---- Middleware ----
 app.use(express.json({ limit: "100kb" }));
 app.use(express.urlencoded({ extended: true, limit: "100kb" }));
+app.disable("x-powered-by");
 
 // Basic security headers (lightweight replacement for helmet)
 app.use((req, res, next) => {
@@ -134,6 +138,34 @@ const readRecords = () => JSON.parse(fs.readFileSync(RECORDS_FILE));
 const writeRecords = (r) => fs.writeFileSync(RECORDS_FILE, JSON.stringify(r, null, 2));
 const readMissed = () => JSON.parse(fs.readFileSync(MISSED_FILE));
 const writeMissed = (m) => fs.writeFileSync(MISSED_FILE, JSON.stringify(m, null, 2));
+
+const MAX_USERNAME_LEN = 48;
+const MAX_NAME_LEN = 80;
+const MAX_PASSWORD_LEN = 128;
+
+function normalizeUsername(input) {
+  return String(input || "").trim();
+}
+
+function normalizeName(input) {
+  return String(input || "").trim();
+}
+
+function isValidUsername(username) {
+  return (
+    username.length >= 3 &&
+    username.length <= MAX_USERNAME_LEN &&
+    /^[a-zA-Z0-9._-]+$/.test(username)
+  );
+}
+
+function isValidName(name) {
+  return name.length >= 1 && name.length <= MAX_NAME_LEN;
+}
+
+function isValidPassword(password) {
+  return password.length >= 8 && password.length <= MAX_PASSWORD_LEN;
+}
 
 function requireLogin(req, res, next) {
   if (!req.session.user) return res.status(401).json({ message: "Not logged in" });
@@ -511,12 +543,24 @@ function buildDailySummary(rows) {
 // 内部 employee 唯一ID默认用 username 存（便于兼容现有逻辑）
 app.post("/api/register", registerLimiter, async (req, res) => {
   const { username, password, name, group } = req.body || {};
-  if (!username || !password || !name) {
+  const normalizedUsername = normalizeUsername(username);
+  const normalizedName = normalizeName(name);
+
+  if (!normalizedUsername || !password || !normalizedName) {
     return res.status(400).json({ message: "All fields required." });
+  }
+  if (!isValidUsername(normalizedUsername)) {
+    return res.status(400).json({ message: "Username must be 3-48 chars, letters/numbers/._- only." });
+  }
+  if (!isValidName(normalizedName)) {
+    return res.status(400).json({ message: "Name is too long." });
+  }
+  if (!isValidPassword(password)) {
+    return res.status(400).json({ message: "Password must be 8-128 characters." });
   }
 
   const users = readUsers();
-  if (users.find((u) => u.username === username)) {
+  if (users.find((u) => u.username === normalizedUsername)) {
     return res.status(400).json({ message: "Username already exists." });
   }
 
@@ -529,11 +573,11 @@ app.post("/api/register", registerLimiter, async (req, res) => {
       : "non-therapist"; // 前端没传或乱传就当 non-therapist
 
   users.push({
-    username,
+    username: normalizedUsername,
     password: hashed,
     role: "employee",
-    employee: username,   // 系统的唯一ID，用 username 充当
-    name,                 // 真实姓名
+    employee: normalizedUsername,   // 系统的唯一ID，用 username 充当
+    name: normalizedName,           // 真实姓名
     group: normalizedGroup
   });
 
@@ -546,8 +590,15 @@ app.post("/api/register", registerLimiter, async (req, res) => {
 // 登录
 app.post("/api/login", loginLimiter, async (req, res) => {
   const { username, password } = req.body || {};
+    const normalizedUsername = normalizeUsername(username);
+  if (!normalizedUsername || !password) {
+    return res.status(400).json({ message: "Username and password required." });
+  }
+  if (!isValidUsername(normalizedUsername) || password.length > MAX_PASSWORD_LEN) {
+    return res.status(400).json({ message: "Invalid credentials." });
+  }
   const users = readUsers();
-  const user = users.find((u) => u.username === username);
+  const user = users.find((u) => u.username === normalizedUsername);
   if (!user) return res.status(401).json({ message: "Invalid credentials" });
 
   const ok = await bcrypt.compare(password, user.password);
