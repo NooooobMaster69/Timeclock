@@ -503,6 +503,7 @@ button[disabled] .paid-badge{
   align-items: center;
   justify-content: center;
   padding: 18px;
+  overflow-y: auto;
   z-index: 9998;
 }
 .mp-overlay.show{ display:flex; }
@@ -513,7 +514,7 @@ button[disabled] .paid-badge{
   border-radius: 18px;
   box-shadow: 0 22px 60px rgba(15, 23, 42, 0.28);
   padding: 16px 16px 14px;
-  max-height: calc(100vh - 36px);
+  max-height: calc(100vh - 32px);
   overflow-y: auto;
 }
 
@@ -680,45 +681,55 @@ padding: 12px 22px;
     min-width: 0;
   }
 
-  /* 小屏自动单列 */
-@media (max-width: 640px) {
-  .mp-grid-top,
-  .mp-grid-2 {
-    grid-template-columns: 1fr;
+    /* 小屏自动单列 */
+  @media (max-width: 640px) {
+    .mp-grid-top,
+    .mp-grid-2 {
+      grid-template-columns: 1fr;
+    }
   }
 
-  .mp-overlay {
-    align-items: flex-start;
-  }
+  @media (max-width: 520px){
+    .mp-overlay{
+      align-items: flex-start;
+      padding: 12px;
+    }
 
-  .mp-modal {
-    padding: 14px 12px 12px;
-    border-radius: 16px;
-  }
+    .mp-modal{
+      padding: 12px 12px 10px;
+      border-radius: 14px;
+      margin-top: 8px;
+    }
 
-  .mp-title {
-    font-size: 15px;
-  }
+    .mp-field label{
+      font-size: 11px;
+      margin-bottom: 4px;
+    }
 
-  .mp-sub {
-    font-size: 12px;
-  }
+    .mp-field input,
+    .mp-field textarea{
+      padding: 7px 9px;
+      font-size: 13px;
+      line-height: 1.2;
+    }
 
-  .mp-field label {
-    font-size: 11px;
-  }
+    .mp-field input[type="date"],
+    .mp-field input[type="time"]{
+      min-height: 36px;
+      height: 36px;
+      -webkit-appearance: none;
+      appearance: none;
+    }
 
-  .mp-field input,
-  .mp-field textarea,
-  .mp-field select {
-    padding: 7px 8px;
-    font-size: 13px;
+    .mp-actions{
+      margin-top: 10px;
+      gap: 8px;
+    }
   }
-}
   </style>
 </head>
 <body>
-
+  
 <h1>360WPT TimeClock</h1>
 
 <!-- 顶部欢迎卡片 -->

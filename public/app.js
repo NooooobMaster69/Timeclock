@@ -924,6 +924,20 @@ async function loadStateAndButtons() {
     _userGroup = s.group;
     const isAdmin = s.role === "admin";
     const isTherapist = s.group === "therapist";
+    
+    const restInWrap = document.getElementById("mpRestInWrap");
+    const restOutWrap = document.getElementById("mpRestOutWrap");
+    const mpHint = document.getElementById("mpHint");
+    if (restInWrap && restOutWrap) {
+      const restDisplay = isTherapist ? "none" : "";
+      restInWrap.style.display = restDisplay;
+      restOutWrap.style.display = restDisplay;
+    }
+    if (mpHint) {
+      mpHint.textContent = isTherapist
+        ? "Tip: lunch must be entered as start + end. If you didn’t take lunch, leave both blank."
+        : "Tip: lunch/rest must be entered as start + end. If you didn’t take lunch/rest, leave both blank.";
+    }
 
     // --- 根据角色调整布局 ---
     const clockContainer = document.getElementById("clockContainer");
