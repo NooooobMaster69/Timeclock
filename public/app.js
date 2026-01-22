@@ -720,7 +720,20 @@ function openMissedPunchModal(dateStr) {
   setVal("mpMealOut",  preset.mealOut);
 
   // therapist 不用 rest
-  if (_userGroup === "therapist") {
+  const isTherapist = _userGroup === "therapist";
+  const restInWrap = document.getElementById("mpRestInWrap");
+  const restOutWrap = document.getElementById("mpRestOutWrap");
+  const hintEl = document.getElementById("mpHint");
+
+  if (restInWrap) restInWrap.style.display = isTherapist ? "none" : "block";
+  if (restOutWrap) restOutWrap.style.display = isTherapist ? "none" : "block";
+  if (hintEl) {
+    hintEl.textContent = isTherapist
+      ? "Tip: lunch must be entered as start + end. If you didn’t take lunch, leave both blank."
+      : "Tip: lunch/rest must be entered as start + end. If you didn’t take lunch/rest, leave both blank.";
+  }
+
+  if (isTherapist) {
     setVal("mpRestIn", "");
     setVal("mpRestOut", "");
   } else {

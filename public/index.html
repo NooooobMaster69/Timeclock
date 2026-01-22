@@ -513,6 +513,8 @@ button[disabled] .paid-badge{
   border-radius: 18px;
   box-shadow: 0 22px 60px rgba(15, 23, 42, 0.28);
   padding: 16px 16px 14px;
+  max-height: calc(100vh - 36px);
+  overflow-y: auto;
 }
 
 .mp-header{
@@ -679,12 +681,40 @@ padding: 12px 22px;
   }
 
   /* 小屏自动单列 */
-  @media (max-width: 640px) {
-    .mp-grid-top,
-    .mp-grid-2 {
-      grid-template-columns: 1fr;
-    }
+@media (max-width: 640px) {
+  .mp-grid-top,
+  .mp-grid-2 {
+    grid-template-columns: 1fr;
   }
+
+  .mp-overlay {
+    align-items: flex-start;
+  }
+
+  .mp-modal {
+    padding: 14px 12px 12px;
+    border-radius: 16px;
+  }
+
+  .mp-title {
+    font-size: 15px;
+  }
+
+  .mp-sub {
+    font-size: 12px;
+  }
+
+  .mp-field label {
+    font-size: 11px;
+  }
+
+  .mp-field input,
+  .mp-field textarea,
+  .mp-field select {
+    padding: 7px 8px;
+    font-size: 13px;
+  }
+}
   </style>
 </head>
 <body>
