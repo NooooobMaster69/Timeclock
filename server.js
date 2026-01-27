@@ -114,7 +114,7 @@ ensureFile(
   USERS_FILE,
   JSON.stringify(
     [
-      // 默认管理员：admin / 1025
+      // 默认管理员：admin / 1021
       { 
         username: "admin", 
         password: bcrypt.hashSync("1021", 10), 
@@ -677,13 +677,28 @@ app.get("/api/employees", requireLogin, (req, res) => {
 app.get("/api/records", requireLogin, (req, res) => {
   const u = req.session.user;
   const all = readRecords();
+  const limit = Number.parseInt(req.query?.limit, 10);
+  const normalizedLimit = Number.isFinite(limit)
+    ? Math.min(Math.max(limit, 1), 500)
+    : null;
 
+  let records = [];
   if (u.role === "admin") {
     const { employee } = req.query || {};
-    if (employee) return res.json(all.filter((r) => r.employee === employee));
-    return res.json(all);
+    records = employee ? all.filter((r) => r.employee === employee) : all;
+  } else {
+    records = all.filter((r) => r.employee === u.employee);
   }
-  res.json(all.filter((r) => r.employee === u.employee));
+
+  if (normalizedLimit) {
+    const sorted = [...records].sort(
+      (a, b) => new Date(a.timestamp) - new Date(b.timestamp)
+    );
+    const limited = sorted.slice(-normalizedLimit);
+    return res.json({ total: records.length, records: limited });
+  }
+
+  res.json(records);
 });
 
 // 记一条打卡记录（基于当前状态校验序列合法）
