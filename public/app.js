@@ -1094,14 +1094,15 @@ const MAX_RECORDS_SHOWN = 50;  // 你可以改成 30 / 100 等
 
 async function loadRecords() {
   try {
-    const data = await api("/api/records");
+    const data = await api(`/api/records?limit=${MAX_RECORDS_SHOWN}`);
+    const records = Array.isArray(data?.records) ? data.records : data;
+    const totalCount = Number.isFinite(data?.total) ? data.total : records.length;
 
     const log = document.getElementById("log");
     if (log) {
-      const total = data.length;
+      const total = totalCount;
       // 只拿最后 MAX_RECORDS_SHOWN 条
-      const startIndex = Math.max(total - MAX_RECORDS_SHOWN, 0);
-      const shown = data.slice(startIndex).reverse(); // 最新在上
+      const shown = records.slice(-MAX_RECORDS_SHOWN).reverse(); // 最新在上
 
       log.innerHTML = `
         <h3>Recent Records</h3>
@@ -1120,14 +1121,14 @@ async function loadRecords() {
         </ul>
       `;
     }
-    return data;
+    return records;
   } catch (err) {
     return [];
   }
 }
 
 async function viewSummaryClient() {
-  const rec = await loadRecords();
+  const rec = await api("/api/records");
   const sum = computeSummaryClient(rec);
   toast(
     `Pay Period: ${sum.periodStart} – ${sum.periodEnd}\n` +
