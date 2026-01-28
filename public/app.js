@@ -28,6 +28,21 @@ let _userRole = "";
 let _userGroup = "";
 let _empNameMap = new Map(); // employeeId -> displayName
 let _lastState = null; // ✅ 缓存 /api/state，给 missed punch 判断用
+let _inFlight = new Set();
+
+function setButtonLoading(button, isLoading, label) {
+  if (!button) return;
+  if (isLoading) {
+    _inFlight.add(button);
+    button.dataset.label = button.textContent || "";
+    button.textContent = label || "Loading...";
+    button.disabled = true;
+  } else {
+    _inFlight.delete(button);
+    button.textContent = button.dataset.label || button.textContent;
+    button.disabled = false;
+  }
+}
 
 function toast(msg) {
   const el = document.getElementById("toast");
@@ -57,15 +72,20 @@ function toast(msg) {
 
 // ---------- 登录页逻辑 ----------
 async function handleLogin() {
+  const btn = $("#loginBtn");
+  if (_inFlight.has(btn)) return;
   const username = $("#username")?.value.trim();
   const password = $("#password")?.value.trim();
   if (!username || !password) return toast("Please enter username & password.");
 
   try {
+    setButtonLoading(btn, true, "Signing in...");
     await api("/api/login", { method: "POST", json: { username, password } });
     window.location.href = "index.html";
   } catch (err) {
     toast("Login failed: " + err.message);
+  } finally {
+    setButtonLoading(btn, false);
   }
 }
 
@@ -91,6 +111,8 @@ function bindLoginPage() {
 
 // ---------- 注册页逻辑 ----------
 async function register() {
+  const btn = $("#registerBtn");
+  if (_inFlight.has(btn)) return;
   const username = $("#username")?.value.trim();
   const name     = $("#name")?.value.trim();
   const password = $("#password")?.value.trim();
@@ -109,6 +131,7 @@ async function register() {
   }
 
   try {
+    setButtonLoading(btn, true, "Creating account...");
     await api("/api/register", {
       method: "POST",
       json: { username, password, name, group }
@@ -117,6 +140,8 @@ async function register() {
     window.location.href = "login.html";
   } catch (e) {
     toast(e.message);
+  } finally {
+    setButtonLoading(btn, false);
   }
 }
 
