@@ -201,6 +201,174 @@
     .black  { background: #1e293b; }
     .red    { background: #dc2626; }
 
+        .admin-filters {
+      margin-bottom: 8px;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: flex-end;
+    }
+    .admin-field label {
+      margin-right: 4px;
+      font-weight: 600;
+      color: #475569;
+    }
+    .admin-select {
+      padding: 4px 6px;
+      border-radius: 6px;
+      border: 1px solid #cbd5e1;
+      background: #fff;
+    }
+    .admin-filter-hint {
+      font-size: 12px;
+      color: #64748b;
+    }
+    .admin-panel {
+      margin-top: 14px;
+    }
+    .admin-panel-title {
+      font-weight: 800;
+      margin: 10px 0 8px;
+    }
+    .admin-summary-buttons {
+      margin-bottom: 6px;
+    }
+    .admin-custom-range {
+      border-top: none;
+      padding-top: 0;
+      margin-top: 4px;
+    }
+    .admin-custom-range span {
+      margin: 0 4px;
+    }
+    .admin-custom-range .admin-export-btn {
+      margin-left: 6px;
+    }
+    .admin-mp-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .admin-mp-card {
+      border: 1px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 12px;
+      background: #fff;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: flex-start;
+    }
+    .admin-mp-meta {
+      font-weight: 800;
+      color: #0f172a;
+    }
+    .admin-mp-id {
+      color: #64748b;
+      font-weight: 600;
+    }
+    .admin-mp-sub {
+      margin-top: 2px;
+      color: #334155;
+      font-size: 13px;
+    }
+    .admin-mp-details {
+      margin-top: 6px;
+      color: #475569;
+      font-size: 12px;
+      line-height: 1.35;
+    }
+    .admin-mp-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      min-width: 140px;
+    }
+
+.account-card {
+  margin-top: 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 14px 16px;
+  background: #f8fafc;
+}
+
+/* ✅ 关键：避免 input padding/border 把宽度撑爆导致重叠/超宽 */
+.account-card,
+.account-card * {
+  box-sizing: border-box;
+}
+
+.account-form {
+  display: grid;
+  /* ✅ 关键：minmax(0,1fr) 防止内容把列撑爆 */
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+  gap: 10px;
+  align-items: end;
+}
+
+.account-field {
+  min-width: 0;
+}
+
+.account-field input {
+  width: 100%;
+  min-width: 0;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+}
+
+/* 手机端：三列变一列，按钮不挤压 */
+@media (max-width: 640px) {
+  .account-form { grid-template-columns: 1fr; }
+  .account-actions button { width: 100%; }
+}
+
+    .account-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .review-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .review-overlay.show {
+      display: flex;
+    }
+    .review-modal {
+      width: min(480px, 92vw);
+      background: #fff;
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.2);
+    }
+    .review-modal h3 {
+      margin: 0 0 8px;
+    }
+    .review-modal textarea {
+      width: 100%;
+      min-height: 90px;
+      border-radius: 10px;
+      border: 1px solid #cbd5e1;
+      padding: 8px 10px;
+      resize: vertical;
+      font-family: inherit;
+    }
+    .review-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
     /* disabled 状态统一处理 */
     button[disabled] {
       background: #cbd5e1 !important;
@@ -846,46 +1014,99 @@ padding: 12px 22px;
   <div id="adminZone">
     <h3>👑 Admin Zone</h3>
 
-    <div style="margin-bottom:8px; display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end;">
-      <div>
-        <label for="adminEmployeeSelect" style="margin-right:4px;">Employee:</label>
-        <select id="adminEmployeeSelect" style="padding:4px 6px; border-radius:6px; border:1px solid #cbd5e1;">
+       <div class="admin-filters">
+      <div class="admin-field">
+        <label for="adminEmployeeSelect">Employee:</label>
+        <select id="adminEmployeeSelect" class="admin-select">
           <option value="">All employees</option>
         </select>
       </div>
-      <div>
-        <label for="adminGroupSelect" style="margin-right:4px;">Group:</label>
-        <select id="adminGroupSelect" style="padding:4px 6px; border-radius:6px; border:1px solid #cbd5e1;">
+            <div class="admin-field">
+        <label for="adminGroupSelect">Group:</label>
+        <select id="adminGroupSelect" class="admin-select">
           <option value="">All groups</option>
           <option value="therapist">Therapist</option>
           <option value="non-therapist">Non-therapist</option>
         </select>
       </div>
-      <div id="adminFilterHint" style="font-size:12px; color:#64748b;">
+       <div id="adminFilterHint" class="admin-filter-hint">
         Choose either Employee or Group.
       </div>
     </div>
 
-    <div class="summary-buttons" style="margin-bottom: 6px;">
+    <div class="summary-buttons admin-summary-buttons">
       <button class="purple" onclick="adminExportCurrent()">Export Current Period</button>
       <button class="black"  onclick="adminExportAll()">Export All History</button>
     </div>
 
-    <div class="custom-range" style="border-top:none; padding-top:0; margin-top:4px;">
+    <div class="custom-range admin-custom-range">
       <div style="margin-bottom: 4px;">Custom range (admin):</div>
       <input type="date" id="adminRangeStart" />
-      <span style="margin: 0 4px;">to</span>
+      <span>to</span>
       <input type="date" id="adminRangeEnd" />
-      <button class="black" style="margin-left: 6px;" onclick="adminExportCustom()">Export</button>
+       <button class="black admin-export-btn" onclick="adminExportCustom()">Export</button>
     </div>
 
-    <div id="adminMissedPunchPanel" style="margin-top:14px;">
-      <div style="font-weight:800; margin: 10px 0 8px;">📝 Missed Punch Requests (Pending)</div>
-      <div id="adminMissedPunchList" style="display:flex; flex-direction:column; gap:10px;"></div>
+    <div class="account-card" id="adminResetCard">
+      <h3>Reset employee password</h3>
+      <div class="account-form">
+        <div class="account-field">
+          <label for="adminResetEmployee">Employee</label>
+          <select id="adminResetEmployee" class="admin-select">
+            <option value="">Select employee</option>
+          </select>
+        </div>
+        <div class="account-field">
+          <label for="adminResetPassword">New password</label>
+          <input type="password" id="adminResetPassword" placeholder="Enter new password" />
+        </div>
+        <div class="account-actions">
+          <button class="black" type="button" onclick="adminResetPassword()">Reset Password</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="adminMissedPunchPanel" class="admin-panel">
+      <div class="admin-panel-title">📝 Missed Punch Requests (Pending)</div>
+      <div id="adminMissedPunchList" class="admin-mp-list"></div>
+    </div>
+  </div>
+
+  <div class="account-card" id="accountCard">
+    <h3>My Account</h3>
+    <div class="account-form">
+      <div class="account-field">
+        <label for="currentPassword">Current password</label>
+        <input type="password" id="currentPassword" />
+      </div>
+      <div class="account-field">
+        <label for="newPassword">New password</label>
+        <input type="password" id="newPassword" />
+      </div>
+      <div class="account-field">
+        <label for="confirmPassword">Confirm password</label>
+        <input type="password" id="confirmPassword" />
+      </div>
+      <div class="account-actions">
+        <button class="black" type="button" onclick="changeMyPassword()">Update Password</button>
+      </div>
     </div>
   </div>
 </div>
 
+<div class="review-overlay" id="adminReviewOverlay">
+  <div class="review-modal">
+    <h3 id="adminReviewTitle">Review Missed Punch</h3>
+    <p id="adminReviewSubtitle" style="margin-top:0; color:#475569; font-size:13px;">
+      Add an optional note for this decision.
+    </p>
+    <textarea id="adminReviewNote" placeholder="Decision note (optional)"></textarea>
+    <div class="review-actions">
+      <button class="black" type="button" onclick="closeAdminReviewModal()">Cancel</button>
+      <button class="green" type="button" id="adminReviewConfirmBtn">Confirm</button>
+    </div>
+  </div>
+</div>
 <!-- Missed Punch Modal（默认隐藏，JS 控制 show/hide） -->
 <div class="mp-overlay" id="mpOverlay">
   <div class="mp-modal">
