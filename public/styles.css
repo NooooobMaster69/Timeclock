@@ -1,0 +1,120 @@
+/* Shared UI styles */
+:root {
+  --text: #0f172a;
+  --muted: #475569;
+  --card: #ffffff;
+  --primary: #2563eb;
+  --primary-weak: #93c5fd;
+  --shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
+  --radius: 18px;
+  --card-width: 420px;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  color: var(--text);
+}
+
+.card {
+  width: 100%;
+  max-width: var(--card-width);
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 28px 24px;
+}
+
+.brand {
+  text-align: center;
+  margin: 0 0 6px;
+  font-weight: 800;
+  color: var(--primary);
+  letter-spacing: .2px;
+}
+
+.subtitle {
+  text-align: center;
+  margin: 0 0 18px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+label {
+  display: block;
+  font-size: 13px;
+  color: var(--muted);
+  margin: 14px 4px 6px;
+}
+
+input,
+select {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  outline: none;
+  font-size: 15px;
+  transition: box-shadow .2s, border-color .2s, transform .05s;
+  background: #fff;
+}
+
+input:focus,
+select:focus {
+  border-color: var(--primary-weak);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary) 20%, transparent);
+}
+
+button {
+  width: 100%;
+  border: 0;
+  border-radius: 12px;
+  padding: 12px 16px;
+  background: var(--primary);
+  color: white;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+  transition: transform .08s ease, box-shadow .2s ease, opacity .2s;
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--primary) 28%, transparent);
+}
+
+button:hover { transform: translateY(-1px); opacity: .96; }
+button:active { transform: translateY(0); }
+button:disabled { cursor: not-allowed; opacity: .7; }
+button:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--primary) 40%, transparent);
+  outline-offset: 2px;
+}
+
+.actions { margin-top: 18px; }
+.links {
+  margin-top: 14px;
+  text-align: center;
+  font-size: 14px;
+}
+.links a {
+  color: var(--muted);
+  text-decoration: none;
+}
+.links a:hover { color: var(--primary); text-decoration: underline; }
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  background: rgba(15, 23, 42, 0.9);
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: 999px;
+  font-size: 14px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.2);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .2s ease;
+}
+.toast.show { opacity: 1; }

@@ -6,7 +6,7 @@ const bcrypt = require("bcrypt");
 const ExcelJS = require("exceljs");
 
 const app = express();
-const PORT = 3000;
+const PORT = Number(process.env.PORT) || 3000;
 const IS_PROD = process.env.NODE_ENV === "production";
 
 // ---- Security Config ----
@@ -16,6 +16,14 @@ if (!process.env.SESSION_SECRET) {
     throw new Error("SESSION_SECRET must be set in production.");
   }
   console.warn("⚠️ SESSION_SECRET is not set. Using a default dev secret.");
+}
+
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "1021";
+if (!process.env.ADMIN_PASSWORD) {
+  if (IS_PROD) {
+    throw new Error("ADMIN_PASSWORD must be set in production.");
+  }
+  console.warn("⚠️ ADMIN_PASSWORD is not set. Using a default dev password.");
 }
 
 // Trust proxy when behind a load balancer (required for secure cookies)
@@ -39,6 +47,22 @@ app.use((req, res, next) => {
   res.setHeader("Permissions-Policy", "geolocation=(), microphone=(), camera=()");
   res.setHeader("Cross-Origin-Resource-Policy", "same-site");
   res.setHeader("X-XSS-Protection", "0");
+  if (IS_PROD) {
+    res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+  }
+  res.setHeader(
+    "Content-Security-Policy",
+    [
+      "default-src 'self'",
+      "base-uri 'self'",
+      "frame-ancestors 'none'",
+      "form-action 'self'",
+      "img-src 'self' data:",
+      "script-src 'self' 'unsafe-inline'",
+      "style-src 'self' 'unsafe-inline'",
+      "font-src 'self' data:",
+    ].join("; ")
+  );
   next();
 });
 
@@ -106,6 +130,10 @@ app.use(
 // 静态资源
 app.use(express.static(path.join(__dirname, "public")));
 
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "ok" });
+});
+
 // ---- Ensure data files exist ----
 function ensureFile(file, defaultContent) {
   if (!fs.existsSync(file)) fs.writeFileSync(file, defaultContent);
@@ -117,7 +145,7 @@ ensureFile(
       // 默认管理员：admin / 1021
       { 
         username: "admin", 
-        password: bcrypt.hashSync("1021", 10), 
+        password: bcrypt.hashSync(ADMIN_PASSWORD, 10), 
         role: "admin",
         group: "admin"        // ✅ 新增：给 admin 一个特殊 group
       },

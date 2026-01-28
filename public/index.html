@@ -180,6 +180,10 @@
 .logout-btn:active {
   transform: translateY(0);
 }
+.logout-btn:focus-visible {
+  outline: 3px solid rgba(248, 250, 252, 0.7);
+  outline-offset: 2px;
+}
 
     button {
       padding: 10px 18px;
@@ -193,6 +197,10 @@
     }
     button:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(15,23,42,0.16); }
     button:active { transform: translateY(0); box-shadow: 0 3px 10px rgba(15,23,42,0.12); }
+    button:focus-visible {
+      outline: 3px solid rgba(37, 99, 235, 0.45);
+      outline-offset: 2px;
+    }
 
     .blue   { background: #2563eb; }
     .green  { background: #16a34a; }
